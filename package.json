@@ -5,10 +5,10 @@
   "repository": "git@jihulab.com:fe-project/documents.git",
   "author": "zhuangbing<845299100@qq.com>",
   "scripts": {
-    "docs:dev": "vitepress dev docs",
-    "docs:build": "vitepress build docs",
-    "docs:serve": "vitepress serve docs",
-    "docs:deploy": "sh deploy.sh"
+    "dev": "vitepress dev docs",
+    "build": "vitepress build docs",
+    "serve": "vitepress serve docs",
+    "deploy": "sh deploy.sh"
   },
   "license": "MIT",
   "devDependencies": {
