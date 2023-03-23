@@ -19,7 +19,7 @@ const sidebar = bars.reduce((accu, current) => {
 }, {});
 
 module.exports = {
-  base: "/documents/",
+  base: "/",
   themeConfig: {
     lastUpdated: "Last Updated",
     nav: [
