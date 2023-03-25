@@ -1,11 +1,10 @@
-前言
+## 前言
 
-本文主要探索 git commit 时代码提交校验的实现，日常开发我们使用 git 来管理代码，而 git commit 校验的实现依赖于第三方插件husky，commitlint，lint-staged等，他们各自都有特殊的功能，共同作用实现 git commit 提交校验。
+本文主要探索 git commit 时代码提交校验的实现，日常开发我们使用 git 来管理代码，而 git commit 校验的实现依赖于第三方插件 husky，commitlint，lint-staged等，他们各自都有特殊的功能，共同作用实现 git commit 提交校验。
 
 注：要实现 git commit 校验应确保你已经安装并配置好了相关的代码格式校验工具，比如eslint，prettier等。如果你还不知道如何安装 eslint，推荐阅读我的另一篇文章：
 
-
-husky是什么
+## husky是什么
 
 husky 是一个 Git Hook 工具。其实就是一个为 git 客户端增加 hook 的工具。将其安装到所在仓库（husky install）的过程中它会自动在 .git 目录下增加相应的钩子实现在 pre-commit 阶段就执行一系列流程保证每一个 commit 的正确性。可以理解为 husky 是 git 版本管理工具为开发者开放的一个开口，让我们可以在代码提交的前后阶段做自己的事情。
 
@@ -18,8 +17,7 @@ Git Hooks 就是那些在 Git 执行特定事件（如commit、merge，push、re
 GitHook工具 - husky 介绍及使用，Husky 官方文档，Husky - GitHub
 
 安装
-```
-
+```bash
 npm install husky --save-dev
 ```
 
