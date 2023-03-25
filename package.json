@@ -13,5 +13,8 @@
   "license": "MIT",
   "devDependencies": {
     "vitepress": "^1.0.0-alpha.61"
+  },
+  "dependencies": {
+    "husky": "^8.0.3"
   }
 }
