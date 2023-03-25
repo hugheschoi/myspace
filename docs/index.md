@@ -1,16 +1,4 @@
----
-home: false
-heroImage: /hero.png
-heroText: Hero 标题
-tagline: Hero 副标题
-actionText: 快速上手 →
-actionLink: /zh/guide/
-features:
-- title: 简洁至上
-  details: 以 Markdown 为中心的项目结构，以最少的配置帮助你专注于写作。
-- title: Vue驱动
-  details: 享受 Vue + webpack 的开发体验，在 Markdown 中使用 Vue 组件，同时可以使用 Vue 来开发自定义主题。
-- title: 高性能
-  details: VuePress 为每个页面预渲染生成静态的 HTML，同时在页面被加载的时候，将作为 SPA 运行。
-footer: MIT Licensed | Copyright © 2020 Hughes
----
+
+在这个示例中，Markdown 文件的一级标题作为导航菜单的名称，文档内容则会被转换为 HTML 格式进行展示。你可以在 Markdown 文件中使用各种 Markdown 标记和语法来编写文档内容，例如标题、段落、列表、代码块等等。同时，你也可以在文档中嵌入 HTML 代码，以实现更灵活的排版效果。
+
+需要注意的是，VitePress 默认使用主题中的布局和样式来渲染页面。如果需要自定义布局和样式，可以创建一个 `.vuepress` 目录，并在其中创建一个名为 `Layout.vue` 的 Vue 组件来实现自定义布局。同时，也可以使用主题提供的选项来调整页面的样式和配置。
