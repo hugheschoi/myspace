@@ -1,4 +1,40 @@
+---
+layout: home
 
-在这个示例中，Markdown 文件的一级标题作为导航菜单的名称，文档内容则会被转换为 HTML 格式进行展示。你可以在 Markdown 文件中使用各种 Markdown 标记和语法来编写文档内容，例如标题、段落、列表、代码块等等。同时，你也可以在文档中嵌入 HTML 代码，以实现更灵活的排版效果。
+title: VitePress
+titleTemplate: Vite & Vue Powered Static Site Generator
 
-需要注意的是，VitePress 默认使用主题中的布局和样式来渲染页面。如果需要自定义布局和样式，可以创建一个 `.vuepress` 目录，并在其中创建一个名为 `Layout.vue` 的 Vue 组件来实现自定义布局。同时，也可以使用主题提供的选项来调整页面的样式和配置。
+# hero:
+#   name: VitePress
+#   text: Vite & Vue Powered Static Site Generator
+#   tagline: Simple, powerful, and fast. Meet the modern SSG framework you've always wanted.
+#   actions:
+#     - theme: brand
+#       text: Get Started
+#       link: /guide/what-is-vitepress
+#     - theme: alt
+#       text: View on GitHub
+#       link: https://github.com/vuejs/vitepress
+features:
+  - icon: 👨
+    title: 关于我
+  - icon: 📝
+    title: Focus on Your Content
+    details: Effortlessly create beautiful documentation sites with just markdown.
+    link: https://github.com/vuejs/vitepress
+  - icon: 🛫️
+      # src: vite.svg
+      # width: 10
+      # height: 10
+    title: 前端
+    details: 工程化、Vue、React.
+  - icon: 👌
+      # src: vue.svg
+      # width: 10
+      # height: 10
+    title: Customize with Vue
+    details: Use Vue syntax and components directly in markdown, or build custom themes with Vue components.
+  - icon: 🚀
+    title: Ship Fast Sites
+    details: Fast initial load with static HTML, fast post-load navigation with client-side routing.
+---  
