@@ -29,6 +29,7 @@ function generateSidebarConfig(docsPath, link = '', index = 0) {
           sidebarConfig.items = [];
         }
         sidebarConfig.items.push(generateSidebarConfig(filepath, `${link}${filename}/`, index + 1))
+        sidebarConfig.collapsable = true;
       }
     } else {
       // // 如果是文件，则添加到当前级别的 sidebar 配置中
