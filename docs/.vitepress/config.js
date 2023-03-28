@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-
+console.log(process.env.NODE_ENV);
 const docsPath = path.dirname(__dirname); // docs 目录路径
 const sidebarConfig = generateSidebarConfig(docsPath);
 // console.log(JSON.stringify(sidebarConfig, null, 2));
@@ -53,6 +53,10 @@ function generateSidebarConfig(docsPath, link = '', index = 0) {
   });
 
   return sidebarConfig;
+}
+
+if (process.env.NODE_ENV === 'production') {
+  delete sidebarConfig.algorithm;
 }
 
 module.exports = {
