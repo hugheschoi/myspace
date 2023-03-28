@@ -57,6 +57,7 @@ function generateSidebarConfig(docsPath, link = '', index = 0) {
 }
 
 if (process.env.NODE_ENV === 'production') {
+  console.log('测试');
   delete sidebarConfig.algorithm;
 }
 
