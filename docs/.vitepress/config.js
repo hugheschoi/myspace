@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-
+console.log(process.env.NODE_ENV);
 const docsPath = path.dirname(__dirname); // docs 目录路径
 const sidebarConfig = generateSidebarConfig(docsPath);
 // console.log(JSON.stringify(sidebarConfig, null, 2));
@@ -56,16 +56,28 @@ function generateSidebarConfig(docsPath, link = '', index = 0) {
   return sidebarConfig;
 }
 
+let nav = [
+  { text: "和 AI 聊技术", link: "/chatgpt/" },
+  { text: "开发规范", link: "/rules/" },
+  { text: "算法", link: "/algorithm/" },
+  { text: "Github", link: "https://github.com/hugheschoi" },
+]
+
+// if (process.env.NODE_ENV === 'production') {
+//   delete sidebarConfig.algorithm;
+//   nav = [
+//     { text: "和 AI 聊技术", link: "/chatgpt/" },
+//     { text: "开发规范", link: "/rules/" },
+//     { text: "Github", link: "https://github.com/hugheschoi" },
+//   ]
+// }
+
+
 module.exports = {
   base: "/",
   themeConfig: {
     lastUpdated: "Last Updated",
-    nav: [
-      { text: "和 AI 聊技术", link: "/chatgpt/" },
-      { text: "开发规范", link: "/rules/" },
-      { text: "算法", link: "/algorithm/" },
-      { text: "Github", link: "https://github.com/hugheschoi" },
-    ],
+    nav,
     sidebar: sidebarConfig,
   },
 };
