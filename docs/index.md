@@ -1,16 +1,40 @@
 ---
-home: false
-heroImage: /hero.png
-heroText: Hero 标题
-tagline: Hero 副标题
-actionText: 快速上手 →
-actionLink: /zh/guide/
+layout: home
+
+title: VitePress
+titleTemplate: Vite & Vue Powered Static Site Generator
+
+# hero:
+#   name: VitePress
+#   text: Vite & Vue Powered Static Site Generator
+#   tagline: Simple, powerful, and fast. Meet the modern SSG framework you've always wanted.
+#   actions:
+#     - theme: brand
+#       text: Get Started
+#       link: /guide/what-is-vitepress
+#     - theme: alt
+#       text: View on GitHub
+#       link: https://github.com/vuejs/vitepress
 features:
-- title: 简洁至上
-  details: 以 Markdown 为中心的项目结构，以最少的配置帮助你专注于写作。
-- title: Vue驱动
-  details: 享受 Vue + webpack 的开发体验，在 Markdown 中使用 Vue 组件，同时可以使用 Vue 来开发自定义主题。
-- title: 高性能
-  details: VuePress 为每个页面预渲染生成静态的 HTML，同时在页面被加载的时候，将作为 SPA 运行。
-footer: MIT Licensed | Copyright © 2020 Hughes
----
+  - icon: 👨
+    title: 关于我
+  - icon: 📝
+    title: Focus on Your Content
+    details: Effortlessly create beautiful documentation sites with just markdown.
+    link: https://github.com/vuejs/vitepress
+  - icon: 🛫️
+      # src: vite.svg
+      # width: 10
+      # height: 10
+    title: 前端
+    details: 工程化、Vue、React.
+  - icon: 👌
+      # src: vue.svg
+      # width: 10
+      # height: 10
+    title: Customize with Vue
+    details: Use Vue syntax and components directly in markdown, or build custom themes with Vue components.
+  - icon: 🚀
+    title: Ship Fast Sites
+    details: Fast initial load with static HTML, fast post-load navigation with client-side routing.
+---  
