@@ -12,3 +12,7 @@
 
 nodejs 项目： [Gitee 搜索 - Gitee.com](https://search.gitee.com/?skin=rec&type=repository&q=Node 博客&lang=nodejs&sort=stars_count)
 
+[nodejs_blog: nodejs做的个人简单博客 (gitee.com)](https://gitee.com/xuxu.gao/nodejs_blog?_from=gitee_search)
+
+[nodejs-mysql-cms: 基于nodejs+express+mysql构建的CMS管理系统 (gitee.com)](https://gitee.com/vux/nodejs-mysql-cms)
+
