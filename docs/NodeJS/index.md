@@ -16,3 +16,19 @@ nodejs 项目： [Gitee 搜索 - Gitee.com](https://search.gitee.com/?skin=rec&t
 
 [nodejs-mysql-cms: 基于nodejs+express+mysql构建的CMS管理系统 (gitee.com)](https://gitee.com/vux/nodejs-mysql-cms)
 
+[janishar/nodejs-backend-architecture-typescript: Node.js Backend Architecture Typescript - Learn to build a backend server for production ready blogging platform like Medium and FreeCodeCamp. Main Features: Role based, Express.js, Mongoose, Redis, Mongodb, Joi, Docker, JWT, Unit Tests, Integration Tests. (github.com)](https://github.com/janishar/nodejs-backend-architecture-typescript)
+
+
+
+数据库工具：
+
+[DBeaver Community | Free Universal Database Tool](https://dbeaver.io/)
+
+[DataGrip：由 JetBrains 开发的数据库和 SQL 跨平台 IDE](https://www.jetbrains.com.cn/datagrip/promo/?utm_source=baidu&utm_medium=cpc&utm_campaign=cn-bai-pro-datagrip-ex-pc&utm_content=competitor_datagrip&utm_term=dbeaver&bd_vid=12084028125325428060)
+
+[Navicat Premium | 以单一的 GUI 同时连接不同类型的数据库](https://www.navicat.com.cn/products/navicat-premium)
+
+教程： [SQL 教程 | 菜鸟教程 (runoob.com)](https://www.runoob.com/sql/sql-tutorial.html)
+
+
+
