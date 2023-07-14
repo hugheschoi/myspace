@@ -2,12 +2,11 @@
 
 ## 异步编程的语法目标，就是怎样让它更像同步编程
 
-
 - 回调函数实现
-- 事件监听
-- 发布订阅
+- 事件监听/发布订阅
 - Promise/A+ 和生成器函数
 - async/await
+https://codesandbox.io/s/jslian-xi-6j3f79?file=/src/asyncawait.js
 
 ### **回调函数**
 - 必须在异步任务结束调用回调函数
