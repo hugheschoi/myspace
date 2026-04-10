@@ -57,23 +57,11 @@ function generateSidebarConfig(docsPath, link = '', index = 0) {
 }
 
 let nav = [
-  { text: "和 AI 聊技术", link: "/chatgpt/" },
-  { text: "开发规范", link: "/rules/" },
-  { text: "算法", link: "/algorithm/" },
-  { text: "前端", link: "/Front-end/" },
-  { text: "Github", link: "https://github.com/hugheschoi" },
+  { text: "AI 训练营", link: "/ai-training/" },
+  { text: "复盘整理", link: "/review/" },
+  { text: "踩坑经历", link: "/experience/" },
+  { text: "Github", link: "https://github.com/hugheschoi" }
 ]
-
-if (process.env.NODE_ENV === 'production') {
-  delete sidebarConfig.algorithm;
-  nav = [
-    { text: "前端", link: "/Front-end/" },
-    { text: "和 AI 聊技术", link: "/chatgpt/" },
-    { text: "开发规范", link: "/rules/" },
-    { text: "Github", link: "https://github.com/hugheschoi" },
-  ]
-}
-
 
 module.exports = {
   base: "/",
