@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 # abort on errors
-if [ "$(git config --global --get user.email)" ]
+if [ "$(git config --local --get user.email)" ]
   then
     if [ "$(git config user.email)" = "845299100@qq.com" ]
     then
@@ -20,7 +20,7 @@ if [ "$(git config --global --get user.email)" ]
       git commit -m 'deploy'
 
       # if you are deploying to https://<USERNAME>.github.io
-      git push -f git@github.com:hugheschoi/hugheschoi.github.io.git main
+      git push -f https://github.com/hugheschoi/hugheschoi.github.io.git main
 
     else
       echo "The git user is not hugheschoi"
