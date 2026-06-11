@@ -1,0 +1,1022 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI 研发提效 Harness 方案</title>
+  <style>
+    :root {
+      --paper: #fbfaf7;
+      --ink: #17202a;
+      --muted: #657080;
+      --line: #d9dee6;
+      --soft: #eef2f4;
+      --coral: #e85d2a;
+      --amber: #f59e0b;
+      --teal: #1f9d8a;
+      --green: #2f8f5b;
+      --blue: #2f6f9f;
+      --violet: #6b5fb5;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: #dfe3e8;
+      color: var(--ink);
+      font-family: Inter, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+    }
+
+    body {
+      padding: 28px 0;
+    }
+
+    main.deck {
+      display: grid;
+      gap: 28px;
+      justify-items: center;
+    }
+
+    .slide {
+      position: relative;
+      width: 1280px;
+      height: 720px;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      background: var(--paper);
+      box-shadow: 0 18px 60px rgba(26, 35, 49, 0.18);
+      padding: 48px 64px 46px;
+    }
+
+    .slide::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 12px;
+      height: 100%;
+      background: linear-gradient(180deg, var(--coral), var(--teal));
+    }
+
+    .slide::after {
+      content: "";
+      position: absolute;
+      right: 44px;
+      top: 34px;
+      width: 118px;
+      height: 8px;
+      border-radius: 8px;
+      background: linear-gradient(90deg, var(--coral), var(--amber), var(--teal));
+      opacity: 0.9;
+    }
+
+    .cover {
+      padding: 72px 76px 56px;
+      background:
+        linear-gradient(110deg, rgba(232, 93, 42, 0.12), rgba(31, 157, 138, 0.08) 52%, rgba(47, 111, 159, 0.12)),
+        var(--paper);
+    }
+
+    .cover::after {
+      right: 76px;
+      top: 70px;
+      width: 180px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      max-width: 900px;
+      font-size: 58px;
+      line-height: 1.12;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      max-width: 1010px;
+      font-size: 38px;
+      line-height: 1.16;
+      font-weight: 880;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      color: var(--ink);
+      font-size: 21px;
+      line-height: 1.22;
+      font-weight: 830;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--coral);
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      max-width: 960px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 20px;
+      line-height: 1.45;
+    }
+
+    .separator {
+      width: 100%;
+      height: 2px;
+      margin: 22px 0 24px;
+      background: var(--line);
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .page-number {
+      position: absolute;
+      right: 46px;
+      bottom: 28px;
+      color: #7c8793;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .footnote {
+      position: absolute;
+      left: 64px;
+      bottom: 28px;
+      color: #87909d;
+      font-size: 14px;
+    }
+
+    .cover-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 46px;
+      align-items: end;
+      margin-top: 58px;
+    }
+
+    .cover-panel {
+      border-left: 5px solid var(--coral);
+      padding-left: 22px;
+    }
+
+    .cover-panel p {
+      color: #435063;
+      font-size: 22px;
+      line-height: 1.55;
+      font-weight: 650;
+    }
+
+    .signal-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .signal {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 52px;
+      padding: 12px 16px;
+      border: 1px solid rgba(23, 32, 42, 0.12);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.66);
+      font-size: 18px;
+      font-weight: 720;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--teal);
+      flex: 0 0 auto;
+    }
+
+    .dot.coral { background: var(--coral); }
+    .dot.amber { background: var(--amber); }
+    .dot.green { background: var(--green); }
+    .dot.blue { background: var(--blue); }
+    .dot.violet { background: var(--violet); }
+
+    .big-quote {
+      padding: 32px 38px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+      box-shadow: 0 12px 28px rgba(36, 45, 61, 0.08);
+    }
+
+    .big-quote p {
+      font-size: 30px;
+      line-height: 1.42;
+      font-weight: 780;
+    }
+
+    .big-quote strong {
+      color: var(--coral);
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .three-col {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .four-col {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .card {
+      min-height: 132px;
+      padding: 19px 20px 17px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 8px 22px rgba(36, 45, 61, 0.07);
+    }
+
+    .compact-card {
+      min-height: 110px;
+      padding: 16px 17px 15px;
+    }
+
+    .tall-card {
+      min-height: 230px;
+    }
+
+    .card p,
+    .compact-card p {
+      margin-top: 8px;
+      color: #536070;
+      font-size: 17px;
+      line-height: 1.42;
+      font-weight: 520;
+    }
+
+    .num-badge {
+      display: inline-grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      margin-bottom: 12px;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--coral);
+      font-size: 18px;
+      font-weight: 850;
+    }
+
+    .num-badge.teal { background: var(--teal); }
+    .num-badge.amber { background: var(--amber); }
+    .num-badge.green { background: var(--green); }
+    .num-badge.blue { background: var(--blue); }
+    .num-badge.violet { background: var(--violet); }
+
+    .tag-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: var(--soft);
+      color: #344053;
+      font-size: 16px;
+      font-weight: 720;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+      margin-top: 30px;
+      align-items: stretch;
+    }
+
+    .flow-item {
+      position: relative;
+      min-height: 92px;
+      padding: 16px 10px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid rgba(23, 32, 42, 0.12);
+      text-align: center;
+      font-size: 15px;
+      line-height: 1.32;
+      font-weight: 760;
+      display: grid;
+      align-items: center;
+    }
+
+    .flow-item:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      right: -8px;
+      top: 50%;
+      width: 12px;
+      height: 2px;
+      background: #aab3bd;
+    }
+
+    .table {
+      display: grid;
+      gap: 10px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 210px 1fr;
+      gap: 18px;
+      align-items: center;
+      min-height: 54px;
+      padding: 11px 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .row strong {
+      color: var(--ink);
+      font-size: 18px;
+    }
+
+    .row span {
+      color: #536070;
+      font-size: 17px;
+      line-height: 1.38;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 0.86fr 1.14fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    .metric {
+      min-height: 176px;
+      padding: 25px 28px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+
+    .metric .value {
+      color: var(--coral);
+      font-size: 52px;
+      line-height: 1;
+      font-weight: 920;
+    }
+
+    .metric p {
+      margin-top: 12px;
+      color: #445166;
+      font-size: 21px;
+      line-height: 1.42;
+      font-weight: 680;
+    }
+
+    .matrix {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .matrix-card {
+      min-height: 136px;
+      padding: 18px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+      box-shadow: 0 8px 22px rgba(36, 45, 61, 0.06);
+    }
+
+    .matrix-card h3 {
+      color: var(--coral);
+      font-size: 20px;
+    }
+
+    .matrix-card p {
+      margin-top: 8px;
+      color: #536070;
+      font-size: 16px;
+      line-height: 1.42;
+      font-weight: 560;
+    }
+
+    .spec-box {
+      display: grid;
+      gap: 11px;
+      padding: 20px 22px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 8px 22px rgba(36, 45, 61, 0.07);
+    }
+
+    .spec-line {
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      gap: 16px;
+      align-items: start;
+      padding: 9px 0;
+      border-bottom: 1px solid #edf0f4;
+    }
+
+    .spec-line:last-child {
+      border-bottom: 0;
+    }
+
+    .spec-line strong {
+      color: var(--coral);
+      font-size: 19px;
+      line-height: 1.25;
+    }
+
+    .spec-line p {
+      color: #4f5d6e;
+      font-size: 17px;
+      line-height: 1.38;
+      font-weight: 560;
+    }
+
+    .roadmap {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-top: 16px;
+    }
+
+    .step {
+      min-height: 258px;
+      padding: 22px 20px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+      position: relative;
+    }
+
+    .step::before {
+      content: "";
+      display: block;
+      width: 48px;
+      height: 5px;
+      border-radius: 5px;
+      margin-bottom: 18px;
+      background: var(--coral);
+    }
+
+    .step:nth-child(2)::before { background: var(--amber); }
+    .step:nth-child(3)::before { background: var(--teal); }
+    .step:nth-child(4)::before { background: var(--blue); }
+
+    .step p {
+      margin-top: 12px;
+      color: #536070;
+      font-size: 17px;
+      line-height: 1.44;
+      font-weight: 560;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 11px;
+    }
+
+    .check {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 12px;
+      align-items: start;
+      min-height: 46px;
+      padding: 10px 13px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid rgba(23, 32, 42, 0.1);
+    }
+
+    .check .mark {
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: var(--teal);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 850;
+      display: grid;
+      place-items: center;
+    }
+
+    .check p {
+      color: #4d5a6b;
+      font-size: 18px;
+      line-height: 1.38;
+      font-weight: 610;
+    }
+
+    @media print {
+      body {
+        padding: 0;
+        background: #fff;
+      }
+
+      main.deck {
+        display: block;
+      }
+
+      .slide {
+        margin: 0;
+        box-shadow: none;
+        page-break-after: always;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck">
+    <section class="slide cover" aria-label="封面">
+      <p class="eyebrow">AI Productivity / Codex + Harness</p>
+      <h1>AI 研发提效 Harness 方案</h1>
+      <p class="subtitle">把 AI 从个人辅助工具，升级为可控、可验证、可复用的研发交付系统。</p>
+      <div class="cover-grid">
+        <div class="cover-panel">
+          <p>基于 Codex 最佳实践和生码 Harness 工程，聚焦前端研发提效、工程验证闭环和团队规模化落地。</p>
+        </div>
+        <div class="signal-stack">
+          <div class="signal"><span class="dot coral"></span><span>任务输入标准化</span></div>
+          <div class="signal"><span class="dot amber"></span><span>上下文获取自动化</span></div>
+          <div class="signal"><span class="dot teal"></span><span>工具执行受控化</span></div>
+          <div class="signal"><span class="dot blue"></span><span>质量验证闭环化</span></div>
+        </div>
+      </div>
+      <div class="footnote">Source: Codex 最佳实践总结 / 生码 Harness 工程</div>
+      <div class="page-number">1 / 15</div>
+    </section>
+
+    <section class="slide" aria-label="核心判断">
+      <div class="content">
+        <p class="eyebrow">01 / Core idea</p>
+        <h2>AI 提效不是多问几句，而是让 AI 进入工程闭环</h2>
+        <div class="separator"></div>
+        <div class="big-quote">
+          <p>最终产物不应该只是代码片段，而是<strong>工程 Diff + 验证报告 + 风险说明 + 经验沉淀</strong>。</p>
+        </div>
+        <div class="flow">
+          <div class="flow-item">Task Spec</div>
+          <div class="flow-item">Context</div>
+          <div class="flow-item">Plan</div>
+          <div class="flow-item">Execution</div>
+          <div class="flow-item">Verify</div>
+          <div class="flow-item">Feedback</div>
+          <div class="flow-item">Memory</div>
+        </div>
+      </div>
+      <div class="footnote">关键词：可控、可验证、可复用、可规模化。</div>
+      <div class="page-number">2 / 15</div>
+    </section>
+
+    <section class="slide" aria-label="当前问题">
+      <div class="content">
+        <p class="eyebrow">02 / Problem</p>
+        <h2>当前 AI 使用最大瓶颈：个人会用，但组织不可复用</h2>
+        <p class="subtitle">如果没有任务契约、上下文、边界和验证，AI 越能动手，风险面也越大。</p>
+        <div class="separator"></div>
+        <div class="three-col">
+          <div class="card tall-card">
+            <span class="num-badge">1</span>
+            <h3>输入散</h3>
+            <p>一句自然语言就开写，AI 需要猜需求、猜接口、猜组件和验收标准。</p>
+          </div>
+          <div class="card tall-card">
+            <span class="num-badge amber">2</span>
+            <h3>上下文散</h3>
+            <p>PRD、TD、YAPI、组件文档靠人工复制，质量强依赖使用者经验。</p>
+          </div>
+          <div class="card tall-card">
+            <span class="num-badge teal">3</span>
+            <h3>闭环弱</h3>
+            <p>缺少自动验证、失败回灌和经验沉淀，同类错误反复出现。</p>
+          </div>
+        </div>
+        <div class="tag-line">
+          <span class="tag">越权修改</span>
+          <span class="tag">字段错误</span>
+          <span class="tag">组件误用</span>
+          <span class="tag">不可编译</span>
+          <span class="tag">返工不可度量</span>
+        </div>
+      </div>
+      <div class="footnote">结论：先让 AI 可交付，再谈规模化。</div>
+      <div class="page-number">3 / 15</div>
+    </section>
+
+    <section class="slide" aria-label="两层方案">
+      <div class="content">
+        <p class="eyebrow">03 / Solution layers</p>
+        <h2>两层建设：Codex 使用体系 + 研发 Harness 体系</h2>
+        <p class="subtitle">前者解决个人如何稳定协作，后者解决团队如何稳定交付。</p>
+        <div class="separator"></div>
+        <div class="two-col">
+          <div class="card tall-card">
+            <h3>Codex 使用体系</h3>
+            <p>统一任务模板、Plan 习惯、`AGENTS.md`、`config.toml`、验证和 review 标准，让个人使用更稳定。</p>
+            <div class="tag-line">
+              <span class="tag">Prompt</span>
+              <span class="tag">Plan</span>
+              <span class="tag">AGENTS.md</span>
+              <span class="tag">Skills</span>
+            </div>
+          </div>
+          <div class="card tall-card">
+            <h3>研发 Harness 体系</h3>
+            <p>建设任务契约、上下文收集、工具网关、执行沙盒、自动验证、失败反馈和经验沉淀。</p>
+            <div class="tag-line">
+              <span class="tag">Task Spec</span>
+              <span class="tag">Tools</span>
+              <span class="tag">Sandbox</span>
+              <span class="tag">Verifier</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footnote">一句话：人用得稳，系统接得住。</div>
+      <div class="page-number">4 / 15</div>
+    </section>
+
+    <section class="slide" aria-label="端到端链路">
+      <div class="content">
+        <p class="eyebrow">04 / Operating model</p>
+        <h2>端到端链路：从任务输入到经验沉淀</h2>
+        <p class="subtitle">这条链路是 AI 研发提效的最小闭环，先用脚本和约定跑通，再逐步平台化。</p>
+        <div class="separator"></div>
+        <div class="flow">
+          <div class="flow-item">任务契约</div>
+          <div class="flow-item">上下文收集</div>
+          <div class="flow-item">生成计划</div>
+          <div class="flow-item">受控执行</div>
+          <div class="flow-item">自动验证</div>
+          <div class="flow-item">失败修复</div>
+          <div class="flow-item">沉淀复用</div>
+        </div>
+        <div class="two-col" style="margin-top: 34px;">
+          <div class="metric">
+            <div class="value">少猜</div>
+            <p>Task Spec 和上下文收集减少模型猜测。</p>
+          </div>
+          <div class="metric">
+            <div class="value">可验</div>
+            <p>验证失败进入下一轮修复，而不是停在“看起来完成”。</p>
+          </div>
+        </div>
+      </div>
+      <div class="footnote">Harness 的核心：让模型每一步都有事实反馈。</div>
+      <div class="page-number">5 / 15</div>
+    </section>
+
+    <section class="slide" aria-label="优先场景">
+      <div class="content">
+        <p class="eyebrow">05 / Use cases</p>
+        <h2>优先落地高 ROI 场景</h2>
+        <p class="subtitle">先选高频、结构稳定、容易验证的场景，不要一开始追求全能 Agent。</p>
+        <div class="separator"></div>
+        <div class="matrix">
+          <div class="matrix-card">
+            <h3>P0 需求理解</h3>
+            <p>PRD/TD 摘要，提取功能点、接口、权限、埋点、疑问点和前端 checklist。</p>
+          </div>
+          <div class="matrix-card">
+            <h3>P0 接口提效</h3>
+            <p>从 YAPI 生成类型、请求方法、mock 数据、字段映射和影响面分析。</p>
+          </div>
+          <div class="matrix-card">
+            <h3>P1 生码</h3>
+            <p>基于模板生成列表页、详情页、表单页，并接入状态、接口和组件。</p>
+          </div>
+          <div class="matrix-card">
+            <h3>P1 CR / Review</h3>
+            <p>检查潜在 bug、异常分支、越权修改、规范问题和 PR 风险说明。</p>
+          </div>
+        </div>
+        <div class="tag-line">
+          <span class="tag">测试提效</span>
+          <span class="tag">视觉 QA</span>
+          <span class="tag">Bug 排查</span>
+          <span class="tag">文档生成</span>
+          <span class="tag">重构迁移</span>
+        </div>
+      </div>
+      <div class="footnote">MVP 建议：先做基于模板的列表页生码。</div>
+      <div class="page-number">6 / 15</div>
+    </section>
+
+    <section class="slide" aria-label="Task Spec">
+      <div class="content">
+        <p class="eyebrow">06 / Task Spec</p>
+        <h2>所有 AI 任务先进入结构化输入</h2>
+        <p class="subtitle">Task Spec 的价值是减少猜测，让 Codex 可以先计划、再按边界执行、最后按标准验收。</p>
+        <div class="separator"></div>
+        <div class="spec-box">
+          <div class="spec-line">
+            <strong>task</strong>
+            <p>任务名称、类型、目标路由、页面或模块范围。</p>
+          </div>
+          <div class="spec-line">
+            <strong>sources</strong>
+            <p>PRD、前端 TD、后端 TD、YAPI、设计稿、参考页面。</p>
+          </div>
+          <div class="spec-line">
+            <strong>constraints</strong>
+            <p>组件库、请求封装、状态管理、可编辑目录、禁止事项。</p>
+          </div>
+          <div class="spec-line">
+            <strong>acceptance</strong>
+            <p>页面行为、字段一致性、loading/empty/error、lint、typecheck、截图。</p>
+          </div>
+        </div>
+      </div>
+      <div class="footnote">输入越明确，后续验证和复盘越可靠。</div>
+      <div class="page-number">7 / 15</div>
+    </section>
+
+    <section class="slide" aria-label="上下文工程">
+      <div class="content">
+        <p class="eyebrow">07 / Context engineering</p>
+        <h2>上下文不是越多越好，而是按任务规约</h2>
+        <p class="subtitle">Prompt 是工作台，不是仓库；长期规则、动态接口和组件文档应通过文件或工具进入上下文。</p>
+        <div class="separator"></div>
+        <div class="three-col">
+          <div class="card compact-card">
+            <h3>需求上下文</h3>
+            <p>PRD、TD、验收标准、疑问点，摘要后注入。</p>
+          </div>
+          <div class="card compact-card">
+            <h3>接口上下文</h3>
+            <p>YAPI、字段类型、请求方法、mock，工具查询生成。</p>
+          </div>
+          <div class="card compact-card">
+            <h3>代码上下文</h3>
+            <p>目录结构、相似页面、工具函数，按相关性检索。</p>
+          </div>
+          <div class="card compact-card">
+            <h3>组件上下文</h3>
+            <p>组件库 API、示例、规范，禁止编造不存在组件。</p>
+          </div>
+          <div class="card compact-card">
+            <h3>规范上下文</h3>
+            <p>架构、权限、埋点、i18n，沉淀在 `AGENTS.md`。</p>
+          </div>
+          <div class="card compact-card">
+            <h3>验证上下文</h3>
+            <p>lint、typecheck、test、截图结果，失败后回灌。</p>
+          </div>
+        </div>
+      </div>
+      <div class="footnote">好的上下文管理，让 AI 像读过项目的同事。</div>
+      <div class="page-number">8 / 15</div>
+    </section>
+
+    <section class="slide" aria-label="工具网关">
+      <div class="content">
+        <p class="eyebrow">08 / Tool gateway</p>
+        <h2>工具能提效，也必须受控</h2>
+        <p class="subtitle">让 AI 只能通过批准的工具行动，工具有 Schema、权限、边界和观测。</p>
+        <div class="separator"></div>
+        <div class="two-col">
+          <div class="table">
+            <div class="row"><strong>Repo Reader</strong><span>读取目录、文件、相似页面，只读且限制范围。</span></div>
+            <div class="row"><strong>YAPI Tool</strong><span>查询接口，生成类型和请求方法。</span></div>
+            <div class="row"><strong>Component Docs</strong><span>查询组件 API 和示例，减少组件误用。</span></div>
+            <div class="row"><strong>Command Runner</strong><span>执行白名单命令，设置超时和日志。</span></div>
+          </div>
+          <div class="card tall-card">
+            <h3>安全边界</h3>
+            <p>独立分支或 worktree、editable scope、禁止无批准依赖、高风险操作确认、关键调用留日志。</p>
+            <div class="tag-line">
+              <span class="tag">最小权限</span>
+              <span class="tag">命令白名单</span>
+              <span class="tag">超时</span>
+              <span class="tag">审计</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footnote">执行边界清楚，AI 才能更放心地承担任务。</div>
+      <div class="page-number">9 / 15</div>
+    </section>
+
+    <section class="slide" aria-label="验证闭环">
+      <div class="content">
+        <p class="eyebrow">09 / Verification loop</p>
+        <h2>没有验证，AI 只能靠自信；有验证，AI 才能靠反馈</h2>
+        <p class="subtitle">验证结果必须进入下一轮上下文，而不是只作为最终说明。</p>
+        <div class="separator"></div>
+        <div class="flow">
+          <div class="flow-item">format</div>
+          <div class="flow-item">lint</div>
+          <div class="flow-item">typecheck</div>
+          <div class="flow-item">unit test</div>
+          <div class="flow-item">build</div>
+          <div class="flow-item">screenshot</div>
+          <div class="flow-item">CR rules</div>
+        </div>
+        <div class="three-col" style="margin-top: 34px;">
+          <div class="card compact-card">
+            <h3>可确定问题</h3>
+            <p>自动修复 1-2 轮，例如类型错误、字段不匹配。</p>
+          </div>
+          <div class="card compact-card">
+            <h3>不确定问题</h3>
+            <p>停止并输出问题，例如需求冲突、信息缺失。</p>
+          </div>
+          <div class="card compact-card">
+            <h3>高风险问题</h3>
+            <p>请求人工确认，例如公共模块、依赖和权限变更。</p>
+          </div>
+        </div>
+      </div>
+      <div class="footnote">闭环原则：生成代码 -> 验证失败 -> 注入错误 -> 修复 -> 再验证。</div>
+      <div class="page-number">10 / 15</div>
+    </section>
+
+    <section class="slide" aria-label="MVP">
+      <div class="content">
+        <p class="eyebrow">10 / MVP</p>
+        <h2>第一版 MVP：基于模板生成列表页</h2>
+        <p class="subtitle">列表页高频、结构稳定、验证明确，是最适合跑通 Harness 闭环的入口场景。</p>
+        <div class="separator"></div>
+        <div class="split">
+          <div class="metric">
+            <div class="value">1 个场景</div>
+            <p>先稳定一个列表页闭环，再扩展详情页、表单页、弹窗和批量操作。</p>
+          </div>
+          <div class="table">
+            <div class="row"><strong>输入</strong><span>PRD、TD、YAPI、模板目录、目标路由、验收标准。</span></div>
+            <div class="row"><strong>执行</strong><span>找相似页面，生成类型和请求方法，接入筛选、表格、分页。</span></div>
+            <div class="row"><strong>验证</strong><span>lint、typecheck、截图、字段一致性和 CR rules。</span></div>
+            <div class="row"><strong>输出</strong><span>工程 Diff、验证结果、风险提示、经验沉淀建议。</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="footnote">MVP 不追求覆盖所有页面，只追求一个场景稳定交付。</div>
+      <div class="page-number">11 / 15</div>
+    </section>
+
+    <section class="slide" aria-label="团队工作流">
+      <div class="content">
+        <p class="eyebrow">11 / Team workflow</p>
+        <h2>团队协作方式：人定义边界，AI 执行闭环</h2>
+        <p class="subtitle">人不需要逐行指挥 AI，但必须定义目标、边界、风险和验收标准。</p>
+        <div class="separator"></div>
+        <div class="two-col">
+          <div class="checklist">
+            <div class="check"><span class="mark">1</span><p>研发提交 Task Spec，并提供必要 PRD、TD、YAPI。</p></div>
+            <div class="check"><span class="mark">2</span><p>Codex 先 Plan，列出文件计划、接口计划和验证计划。</p></div>
+            <div class="check"><span class="mark">3</span><p>AI 在 editable scope 内改码，并自动跑验证。</p></div>
+            <div class="check"><span class="mark">4</span><p>失败自动修复或停止上报，完成后输出交付报告。</p></div>
+          </div>
+          <div class="card tall-card">
+            <h3>沉淀动作</h3>
+            <p>如果同类问题出现第二次，就更新规则、模板、Skill、CR 检查项或组件示例。</p>
+            <div class="tag-line">
+              <span class="tag">AGENTS.md</span>
+              <span class="tag">Skill</span>
+              <span class="tag">模板</span>
+              <span class="tag">FAQ</span>
+              <span class="tag">CR rules</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footnote">成熟度问题：团队是否还在反复教 AI 同一件事。</div>
+      <div class="page-number">12 / 15</div>
+    </section>
+
+    <section class="slide" aria-label="路线图">
+      <div class="content">
+        <p class="eyebrow">12 / Roadmap</p>
+        <h2>建设路线：从个人标准化到规模化 Harness</h2>
+        <p class="subtitle">不要先造大平台，先把一个闭环跑稳，再把稳定部分产品化。</p>
+        <div class="separator"></div>
+        <div class="roadmap">
+          <div class="step">
+            <h3>P0 个人标准化</h3>
+            <p>1-2 周：`AGENTS.md`、`config.toml`、Task Spec、Prompt 模板、Review 标准。</p>
+          </div>
+          <div class="step">
+            <h3>P1 最小闭环</h3>
+            <p>2-4 周：列表页生码，接入 YAPI、组件文档、相似页面和自动验证。</p>
+          </div>
+          <div class="step">
+            <h3>P2 团队可控化</h3>
+            <p>1-2 个月：工具网关、文件边界、命令白名单、CR Shift-Left、截图 QA。</p>
+          </div>
+          <div class="step">
+            <h3>P3 规模化</h3>
+            <p>2-3 个月：Skills、Automations、评测集、质量指标、历史失败记忆。</p>
+          </div>
+        </div>
+      </div>
+      <div class="footnote">节奏建议：先窄场景闭环，再横向扩展任务类型。</div>
+      <div class="page-number">13 / 15</div>
+    </section>
+
+    <section class="slide" aria-label="指标体系">
+      <div class="content">
+        <p class="eyebrow">13 / Metrics</p>
+        <h2>衡量 AI 提效，要看工程结果而不是代码行数</h2>
+        <p class="subtitle">指标应该反向驱动 Harness 迭代：哪里失败，就补哪里上下文、工具、规则或验证。</p>
+        <div class="separator"></div>
+        <div class="matrix">
+          <div class="matrix-card">
+            <h3>效率指标</h3>
+            <p>需求理解耗时、平均交付时长、人工返工次数、自动修复成功率。</p>
+          </div>
+          <div class="matrix-card">
+            <h3>质量指标</h3>
+            <p>首次生成可编译率、PR Review 问题数、接口字段错误数、测试失败率。</p>
+          </div>
+          <div class="matrix-card">
+            <h3>治理指标</h3>
+            <p>越权修改次数、命令失败率、工具调用失败率、成本和 Token 消耗。</p>
+          </div>
+          <div class="matrix-card">
+            <h3>沉淀指标</h3>
+            <p>同类问题复发率、规则更新数、模板复用数、Skill 命中率。</p>
+          </div>
+        </div>
+        <div class="big-quote" style="margin-top: 22px; padding: 22px 28px;">
+          <p style="font-size: 24px;">最重要的指标：同类问题复发率。</p>
+        </div>
+      </div>
+      <div class="footnote">如果同一个坑反复出现，说明它还没有被 Harness 化。</div>
+      <div class="page-number">14 / 15</div>
+    </section>
+
+    <section class="slide" aria-label="首月行动">
+      <div class="content">
+        <p class="eyebrow">14 / First month</p>
+        <h2>首月行动：先把闭环跑起来</h2>
+        <p class="subtitle">从低成本的文档、规则和真实任务试点开始，边用边沉淀。</p>
+        <div class="separator"></div>
+        <div class="three-col">
+          <div class="card tall-card">
+            <span class="num-badge">1</span>
+            <h3>第一周</h3>
+            <p>整理 `AGENTS.md`、`code_review.md`、Task Spec 模板和 3 个高频 AI 场景。</p>
+          </div>
+          <div class="card tall-card">
+            <span class="num-badge amber">2</span>
+            <h3>第二周</h3>
+            <p>试点 3-5 个真实任务，记录返工点、验证结果和重复问题。</p>
+          </div>
+          <div class="card tall-card">
+            <span class="num-badge teal">3</span>
+            <h3>第三到四周</h3>
+            <p>选择列表页生码，接入 YAPI、组件文档和 lint/typecheck 验证。</p>
+          </div>
+        </div>
+        <div class="big-quote" style="margin-top: 24px; padding: 22px 28px;">
+          <p style="font-size: 24px;">让 AI 在清晰边界、充足上下文和自动验证里稳定交付。</p>
+        </div>
+      </div>
+      <div class="footnote">最终目标：任务标准化、上下文自动化、验证闭环化、经验资产化。</div>
+      <div class="page-number">15 / 15</div>
+    </section>
+  </main>
+</body>
+</html>

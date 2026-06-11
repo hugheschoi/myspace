@@ -47,15 +47,26 @@ print(f"score: {score:.1f}")  # score: 95.6
 # 对齐
 print(f"name: {name:<10} age: {age:>5}")  # name: Alice      age:    25
 print(f"name: {name:^10} age: {age:^5}")  # name:   Alice    age:  25
-# 进制
-print(f"score in hex: {score:x}")  # score in hex: 5f
-print(f"score in binary: {score:b}")  # score in binary: 1011111
-print(f"score in octal: {score:o}")  # score in octal: 137
+# 进制转换
+num = 255
+print(f"十进制: {num}, 十六进制: {num:x}, 二进制: {num:b}")
 
 # 格式化输出 2: format() 方法
-print("name: {}, age: {}".format(name, age))  # name: Alice, age: 25
-print("score: {:.2f}".format(score))  # score: 95.57
-print("name: {:<10} age: {:>5}".format(name, age))  # name: Alice      age:    25
-print("score in hex: {:x}".format(score))  # score in hex: 5f
-print("score in binary: {:b}".format(score))  # score in binary: 1011111
-print("score in octal: {:o}".format(score))  # score in octal: 137
+name = "Bob"
+age = 30
+score = 95.5
+
+# 按顺序填充
+print("姓名: {}, 年龄: {}".format(name, age))
+
+# 指定索引
+print("{1}的年龄是{0}".format(age, name))  # Bob的年龄是30
+
+# 使用关键字参数
+print("姓名: {n}, 年龄: {a}".format(n=name, a=age))
+
+# 数字格式化
+print("分数: {:.2f}".format(score))  # 保留2位小数
+
+# 对齐和填充
+print("{:<10} {:>10}".format(name, age))  # 左对齐和右对齐

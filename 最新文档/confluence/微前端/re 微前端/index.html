@@ -1,0 +1,1478 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Retail Micro Frontend Architecture</title>
+  <style>
+    :root {
+      --ink: #0f172a;
+      --muted: #64748b;
+      --line: #dbe3ef;
+      --soft: #f6f8fb;
+      --paper: #ffffff;
+      --orange: #ee4d2d;
+      --orange-dark: #c2410c;
+      --blue: #2563eb;
+      --blue-soft: #dbeafe;
+      --teal: #0891b2;
+      --teal-soft: #cffafe;
+      --green: #16a34a;
+      --green-soft: #dcfce7;
+      --violet: #7c3aed;
+      --violet-soft: #ede9fe;
+      --yellow: #f59e0b;
+      --yellow-soft: #fef3c7;
+      --red: #dc2626;
+      --red-soft: #fee2e2;
+      --shadow: 0 18px 50px rgba(15, 23, 42, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: #e9eef5;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+    }
+
+    main.deck {
+      padding: 36px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+    }
+
+    .slide {
+      position: relative;
+      width: 1280px;
+      height: 720px;
+      overflow: hidden;
+      background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+      box-shadow: var(--shadow);
+      padding: 42px 54px 46px;
+    }
+
+    .slide::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, rgba(238, 77, 45, 0.08), transparent 32%),
+        linear-gradient(180deg, rgba(37, 99, 235, 0.08), transparent 52%);
+      opacity: 0.82;
+    }
+
+    .slide > * { position: relative; z-index: 1; }
+
+    .cover {
+      background: #101827;
+      color: #fff;
+    }
+
+    .cover::before {
+      background:
+        linear-gradient(135deg, rgba(238, 77, 45, 0.42), transparent 42%),
+        linear-gradient(90deg, rgba(8, 145, 178, 0.24), transparent 68%),
+        linear-gradient(180deg, #0f172a 0%, #111827 100%);
+      opacity: 1;
+    }
+
+    .kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(238, 77, 45, 0.1);
+      color: var(--orange-dark);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .cover .kicker {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fed7aa;
+    }
+
+    h1 {
+      margin: 16px 0 0;
+      font-size: 38px;
+      line-height: 1.14;
+      letter-spacing: 0;
+      max-width: 980px;
+    }
+
+    .cover h1 {
+      font-size: 56px;
+      line-height: 1.03;
+      max-width: 880px;
+      margin-top: 28px;
+    }
+
+    .subtitle {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 19px;
+      line-height: 1.42;
+      max-width: 1000px;
+    }
+
+    .cover .subtitle {
+      color: #cbd5e1;
+      max-width: 780px;
+      font-size: 22px;
+    }
+
+    .rule {
+      height: 3px;
+      width: 100%;
+      margin: 22px 0 0;
+      background: linear-gradient(90deg, var(--orange), rgba(37, 99, 235, 0.65), transparent);
+      border-radius: 999px;
+    }
+
+    .content {
+      margin-top: 28px;
+    }
+
+    .compact-content {
+      margin-top: 20px;
+    }
+
+    .page-number {
+      position: absolute;
+      right: 54px;
+      bottom: 24px;
+      color: #94a3b8;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .cover .page-number { color: #64748b; }
+
+    .footer-source {
+      position: absolute;
+      left: 54px;
+      bottom: 22px;
+      color: #94a3b8;
+      font-size: 11px;
+      max-width: 980px;
+    }
+
+    .cover-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 46px;
+      align-items: center;
+      height: 100%;
+      padding-bottom: 12px;
+    }
+
+    .cover-card {
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 24px;
+      backdrop-filter: blur(8px);
+    }
+
+    .cover-stack {
+      display: grid;
+      gap: 14px;
+      margin-top: 34px;
+    }
+
+    .cover-chip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 14px;
+      padding: 14px 16px;
+      background: rgba(15, 23, 42, 0.45);
+      color: #e2e8f0;
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .cover-chip span:last-child {
+      color: #fed7aa;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .label-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #3730a3;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .pill.orange { background: #ffedd5; color: #9a3412; }
+    .pill.blue { background: var(--blue-soft); color: #1d4ed8; }
+    .pill.green { background: var(--green-soft); color: #15803d; }
+    .pill.teal { background: var(--teal-soft); color: #0e7490; }
+    .pill.red { background: var(--red-soft); color: #b91c1c; }
+    .pill.gray { background: #f1f5f9; color: #475569; }
+
+    .section-title {
+      margin: 0 0 10px;
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--ink);
+    }
+
+    .body-copy {
+      color: #334155;
+      font-size: 18px;
+      line-height: 1.52;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .small {
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .two-col.wide-left {
+      grid-template-columns: 1.12fr 0.88fr;
+    }
+
+    .three-col {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .four-col {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+    }
+
+    .card.tight {
+      padding: 14px;
+    }
+
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    .card p {
+      margin: 0;
+      color: #475569;
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    .metric {
+      font-size: 42px;
+      line-height: 1;
+      font-weight: 900;
+      color: var(--orange);
+      margin-bottom: 8px;
+    }
+
+    .bullet-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 10px;
+    }
+
+    .bullet-list li {
+      position: relative;
+      padding-left: 20px;
+      font-size: 17px;
+      line-height: 1.43;
+      color: #334155;
+    }
+
+    .bullet-list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 10px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--orange);
+    }
+
+    .mini-list {
+      margin: 10px 0 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 7px;
+    }
+
+    .mini-list li {
+      position: relative;
+      padding-left: 16px;
+      color: #475569;
+      font-size: 14px;
+      line-height: 1.34;
+    }
+
+    .mini-list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 8px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #94a3b8;
+    }
+
+    .callout {
+      border-left: 5px solid var(--orange);
+      background: #fff7ed;
+      border-radius: 12px;
+      padding: 14px 16px;
+      color: #7c2d12;
+      font-size: 16px;
+      line-height: 1.46;
+      font-weight: 650;
+    }
+
+    .talk {
+      margin-top: 14px;
+      border-left: 4px solid var(--teal);
+      background: #ecfeff;
+      color: #155e75;
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-size: 14px;
+      line-height: 1.38;
+    }
+
+    .code-card {
+      background: #0f172a;
+      color: #dbeafe;
+      border-radius: 14px;
+      padding: 16px 18px;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 15px;
+      line-height: 1.45;
+      box-shadow: 0 16px 36px rgba(15, 23, 42, 0.18);
+      overflow: hidden;
+    }
+
+    .code-card .comment { color: #93c5fd; }
+    .code-card .accent { color: #fdba74; }
+    .code-card .ok { color: #86efac; }
+
+    .source-chip {
+      display: inline-block;
+      margin-top: 10px;
+      color: #64748b;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 11px;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 7px;
+      padding: 5px 7px;
+    }
+
+    .diagram {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.76);
+      padding: 20px;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+    }
+
+    .node {
+      border: 2px solid #cbd5e1;
+      background: #fff;
+      border-radius: 14px;
+      padding: 14px 16px;
+      min-height: 76px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .node strong {
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .node span {
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.3;
+    }
+
+    .node.main { border-color: var(--orange); background: #fff7ed; }
+    .node.base { border-color: var(--blue); background: #eff6ff; }
+    .node.child { border-color: var(--green); background: #f0fdf4; }
+    .node.shared { border-color: var(--teal); background: #ecfeff; }
+    .node.risk { border-color: var(--red); background: #fef2f2; }
+
+    .arrow {
+      color: #94a3b8;
+      font-size: 28px;
+      font-weight: 900;
+      align-self: center;
+      text-align: center;
+    }
+
+    .flow-row {
+      display: grid;
+      grid-template-columns: 1fr 42px 1fr 42px 1fr;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .flow-row.four {
+      grid-template-columns: 1fr 38px 1fr 38px 1fr 38px 1fr;
+    }
+
+    .remote-map {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .remote-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .remote-item {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 12px;
+      align-items: center;
+      border: 1px solid #dbe3ef;
+      background: #fff;
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    .remote-item strong {
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    .remote-item span {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .sequence {
+      display: grid;
+      gap: 9px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 44px 1fr;
+      gap: 12px;
+      align-items: start;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      padding: 11px 13px;
+    }
+
+    .step-num {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--orange);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      font-size: 15px;
+    }
+
+    .step strong {
+      display: block;
+      font-size: 16px;
+      margin-bottom: 3px;
+    }
+
+    .step span {
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.36;
+    }
+
+    .matrix {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      font-size: 14px;
+    }
+
+    .matrix th,
+    .matrix td {
+      padding: 12px 13px;
+      border-bottom: 1px solid #e2e8f0;
+      vertical-align: top;
+      text-align: left;
+      line-height: 1.36;
+    }
+
+    .matrix th {
+      background: #f8fafc;
+      color: #334155;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .matrix tr:last-child td { border-bottom: 0; }
+
+    .swimlane {
+      display: grid;
+      grid-template-columns: 150px repeat(5, 1fr);
+      gap: 8px;
+      align-items: stretch;
+      font-size: 13px;
+    }
+
+    .lane-label {
+      border-radius: 12px;
+      padding: 12px;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+    }
+
+    .lane-box {
+      border-radius: 12px;
+      padding: 10px 11px;
+      min-height: 66px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: #475569;
+      line-height: 1.28;
+    }
+
+    .lane-box.hot {
+      border-color: var(--orange);
+      background: #fff7ed;
+      color: #7c2d12;
+      font-weight: 750;
+    }
+
+    .lane-box.cool {
+      border-color: var(--blue);
+      background: #eff6ff;
+      color: #1e3a8a;
+      font-weight: 750;
+    }
+
+    .lane-box.green {
+      border-color: var(--green);
+      background: #f0fdf4;
+      color: #166534;
+      font-weight: 750;
+    }
+
+    .risk-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .risk-item {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 11px;
+      align-items: start;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      padding: 13px;
+      background: #fff;
+    }
+
+    .risk-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      background: var(--red-soft);
+      color: var(--red);
+      font-weight: 900;
+    }
+
+    .risk-item strong {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 3px;
+    }
+
+    .risk-item span {
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.32;
+    }
+
+    .decision-tree {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .tree-col {
+      display: grid;
+      gap: 10px;
+    }
+
+    .tree-card {
+      border: 1px solid #dbe3ef;
+      background: #fff;
+      border-radius: 13px;
+      padding: 12px 14px;
+    }
+
+    .tree-card strong {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 5px;
+      color: #0f172a;
+    }
+
+    .tree-card span {
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.34;
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0;
+      margin-top: 24px;
+      position: relative;
+      padding-top: 34px;
+    }
+
+    .timeline::before {
+      content: "";
+      position: absolute;
+      left: 7%;
+      right: 7%;
+      top: 14px;
+      height: 4px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--orange), var(--blue), var(--green));
+    }
+
+    .time-node {
+      position: relative;
+      text-align: center;
+      padding: 0 8px;
+    }
+
+    .time-node::before {
+      content: "";
+      position: absolute;
+      top: -27px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      border: 4px solid var(--orange);
+      box-shadow: 0 0 0 3px rgba(238, 77, 45, 0.14);
+    }
+
+    .time-node:nth-child(3)::before { border-color: var(--blue); }
+    .time-node:nth-child(4)::before { border-color: var(--teal); }
+    .time-node:nth-child(5)::before { border-color: var(--green); }
+
+    .time-title {
+      font-weight: 900;
+      color: #0f172a;
+      font-size: 15px;
+    }
+
+    .time-desc {
+      margin-top: 5px;
+      color: #64748b;
+      font-size: 12px;
+      line-height: 1.32;
+    }
+
+    .source-table {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .source-row {
+      display: grid;
+      grid-template-columns: 220px 1fr 190px;
+      gap: 14px;
+      align-items: start;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      background: #fff;
+      padding: 12px 14px;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .source-row strong {
+      font-size: 14px;
+      color: #0f172a;
+    }
+
+    .quote {
+      font-size: 24px;
+      line-height: 1.38;
+      color: #0f172a;
+      font-weight: 800;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 24px 28px;
+      max-width: 940px;
+      box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
+    }
+
+    .legend {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 800;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .dot.orange { background: var(--orange); }
+    .dot.blue { background: var(--blue); }
+    .dot.green { background: var(--green); }
+    .dot.teal { background: var(--teal); }
+
+    @media print {
+      html, body { background: #fff; }
+      main.deck { padding: 0; gap: 0; }
+      .slide {
+        box-shadow: none;
+        break-after: page;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck">
+    <section class="slide cover" aria-label="Slide 1">
+      <div class="cover-grid">
+        <div>
+          <div class="kicker">Architecture Deep Dive</div>
+          <h1>Retail 主子应用独立架构<br>运行原理与讲解稿</h1>
+          <div class="subtitle">以 vmi-admin-fe、micro-base、sbs-product-fe 为样本，串起 Module Federation、Bootstrap、路由/状态注册、React/Vue 兼容和本地联调。</div>
+          <div class="label-row">
+            <span class="pill orange">vmi-admin-fe 主应用</span>
+            <span class="pill blue">micro-base 基座</span>
+            <span class="pill green">sbs-product-fe 子应用</span>
+          </div>
+        </div>
+        <div class="cover-card">
+          <div class="cover-chip"><span>讲清楚为什么拆</span><span>发布解耦</span></div>
+          <div class="cover-chip"><span>讲清楚怎么跑</span><span>运行时加载</span></div>
+          <div class="cover-chip"><span>讲清楚代码在哪</span><span>真实链路</span></div>
+          <div class="cover-chip"><span>讲清楚怎么排障</span><span>可落地</span></div>
+        </div>
+      </div>
+      <div class="page-number">01</div>
+    </section>
+
+    <section class="slide" aria-label="Slide 2">
+      <div class="kicker">01 / 背景</div>
+      <h1>架构改造的核心不是“换技术”，而是解除多团队发布和开发耦合</h1>
+      <div class="subtitle">Confluence 两篇方案文档共同指向一个目标：让 Retail 各 Portal 可以共享基座能力，同时让业务子应用独立开发、独立部署、按需加载。</div>
+      <div class="rule"></div>
+      <div class="content three-col">
+        <div class="card">
+          <div class="metric">18+</div>
+          <h3>发版沟通成本</h3>
+          <p>架构方案提到过去 3 个月发版沟通超过 18 次，根因是多团队共享仓库与发布流程。</p>
+        </div>
+        <div class="card">
+          <div class="metric">6</div>
+          <h3>Retail Portal</h3>
+          <p>目标不是只服务 SCS，而是 Normal、Lovito、SCS 的 PMS/SRM 都能复用同一套基座能力。</p>
+        </div>
+        <div class="card">
+          <div class="metric">1</div>
+          <h3>统一基座</h3>
+          <p>Micro Base 从项目耦合的工具包，沉淀为跨 Portal 的运行时基座和主子应用桥梁。</p>
+        </div>
+      </div>
+      <div class="talk">讲法：先不要进入代码。先说明“拆”是组织协作问题的技术解法，目标是减少主应用侵入和发布牵连。</div>
+      <div class="footer-source">Source: Confluence 2385944962 Retail 主子应用独立架构优化方案；Confluence 2184252778 沉淀 Micro Base</div>
+      <div class="page-number">02</div>
+    </section>
+
+    <section class="slide" aria-label="Slide 3">
+      <div class="kicker">02 / 角色定义</div>
+      <h1>三类工程各有边界：主应用负责壳，基座负责运行时，子应用负责业务模块</h1>
+      <div class="subtitle">这套架构不是把整个页面 iframe 进去，而是在同一个前端运行时里拼装路由、状态、组件和共享能力。</div>
+      <div class="rule"></div>
+      <div class="content three-col">
+        <div class="card">
+          <span class="pill orange">Host</span>
+          <h3>vmi-admin-fe</h3>
+          <ul class="mini-list">
+            <li>页面外壳、布局、菜单、权限入口</li>
+            <li>业务适配层和历史存量代码</li>
+            <li>定义 remote 加载地址与本地覆盖</li>
+          </ul>
+          <span class="source-chip">remotes.ts / bootstrap-app / layout</span>
+        </div>
+        <div class="card">
+          <span class="pill blue">Runtime Kernel</span>
+          <h3>micro-base</h3>
+          <ul class="mini-list">
+            <li>Bootstrap 创建 Vue app</li>
+            <li>收敛 router、store、i18n、global-data</li>
+            <li>提供 load/register module API</li>
+          </ul>
+          <span class="source-chip">src/bootstrap / core-instance / module</span>
+        </div>
+        <div class="card">
+          <span class="pill green">Remote Provider</span>
+          <h3>sbs-product-fe</h3>
+          <ul class="mini-list">
+            <li>通过 Module Federation 暴露业务模块</li>
+            <li>输出 routes、domains、basic、common/react</li>
+            <li>内部可混用 Vue 与 React 页面</li>
+          </ul>
+          <span class="source-chip">projects/scs-product-pms / domains/scm-product</span>
+        </div>
+      </div>
+      <div class="page-number">03</div>
+    </section>
+
+    <section class="slide" aria-label="Slide 4">
+      <div class="kicker">03 / 一句话架构</div>
+      <h1>真实运行形态：Module Federation 远程加载 + micro-base 统一实例 + 主应用路由树合并</h1>
+      <div class="subtitle">基座不是一个可见页面容器，它更像主子应用共同依赖的运行时内核。</div>
+      <div class="rule"></div>
+      <div class="content diagram">
+        <div class="flow-row">
+          <div class="node main">
+            <strong>Browser 进入 /scs</strong>
+            <span>加载 vmi-admin-fe 静态资源</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="node base">
+            <strong>加载 microBaseEntry.js</strong>
+            <span>获得 BootstrapApp / router / store / module API</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="node child">
+            <strong>加载子应用 remote</strong>
+            <span>scsProductPmsEntry.js / scmProductEntry.js</span>
+          </div>
+        </div>
+        <div style="height: 18px;"></div>
+        <div class="flow-row">
+          <div class="node shared">
+            <strong>同一套 router/store/i18n</strong>
+            <span>主子应用共享核心实例，避免多实例</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="node main">
+            <strong>注册业务路由与 store</strong>
+            <span>registerRouter / loadRouter / registerStore</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="node main">
+            <strong>侧边栏渲染菜单</strong>
+            <span>registeredRoutes + 权限过滤</span>
+          </div>
+        </div>
+      </div>
+      <div class="talk">讲法：可以把它描述成“运行时组装”：远程代码先被加载，随后被基座注册进同一个 Vue 应用实例。</div>
+      <div class="page-number">04</div>
+    </section>
+
+    <section class="slide" aria-label="Slide 5">
+      <div class="kicker">04 / 不是同一种微前端</div>
+      <h1>这套链路和 PMS iframe 要分开讲，避免听众把两个机制混在一起</h1>
+      <div class="subtitle">当前代码里确实存在 PMS iframe 预加载和嵌入，但它是 `/admin` Normal PMS 的特殊集成，不是 sbs-product-fe 的接入方式。</div>
+      <div class="rule"></div>
+      <div class="content two-col">
+        <div class="card">
+          <span class="pill green">sbs-product-fe</span>
+          <h3>Module Federation 子应用</h3>
+          <ul class="bullet-list">
+            <li>暴露 JS 模块：`./routes`、`./basic`、`./domains`</li>
+            <li>主应用 import 后拿到路由、组件、领域能力</li>
+            <li>最终渲染在同一套 Vue Router / Vuex 下</li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="pill gray">/admin PMS</span>
+          <h3>iframe 嵌入系统</h3>
+          <ul class="bullet-list">
+            <li>通过 iframe 保留另一个系统自己的运行时</li>
+            <li>有独立的预加载、postMessage、权限短路逻辑</li>
+            <li>用于 Normal PMS 页面，不代表 product 子应用方案</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout" style="margin-top: 18px;">一句话区分：Product 子应用是“代码模块进主应用运行时”；PMS iframe 是“另一个应用在 iframe 内独立运行”。</div>
+      <div class="page-number">05</div>
+    </section>
+
+    <section class="slide" aria-label="Slide 6">
+      <div class="kicker">05 / 启动总线</div>
+      <h1>BootstrapApp 把分散在主应用里的初始化过程收拢成稳定阶段</h1>
+      <div class="subtitle">当前 micro-base 的 `BootstrapApp.run()` 是整个架构的主干：创建实例、加载模块、运行插件、合并菜单、挂载页面。</div>
+      <div class="rule"></div>
+      <div class="content two-col wide-left">
+        <div class="diagram">
+          <div class="sequence">
+            <div class="step"><div class="step-num">1</div><div><strong>initCreate</strong><span>注册插件，创建 router、store、i18n，并触发 before/after create。</span></div></div>
+            <div class="step"><div class="step-num">2</div><div><strong>initModule</strong><span>进入 beforeModule/afterModule，主应用插件在这里注册 store 和 routes。</span></div></div>
+            <div class="step"><div class="step-num">3</div><div><strong>initPlugin</strong><span>执行插件 run，注入通用 SDK 或定制设置。</span></div></div>
+            <div class="step"><div class="step-num">4</div><div><strong>REGISTER_ROUTER + mounted</strong><span>构建 registeredRoutes 菜单树，再 `new Vue(...).$mount('#app')`。</span></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="code-card">
+            <div><span class="comment">// micro-base/src/bootstrap/runner/index.ts</span></div>
+            <div>async run() {</div>
+            <div>&nbsp;&nbsp;await this.<span class="accent">initCreate</span>();</div>
+            <div>&nbsp;&nbsp;await this.<span class="accent">initModule</span>();</div>
+            <div>&nbsp;&nbsp;await this.<span class="accent">initPlugin</span>();</div>
+            <div>&nbsp;&nbsp;store.dispatch(<span class="ok">'REGISTER_ROUTER'</span>);</div>
+            <div>&nbsp;&nbsp;this.<span class="accent">mounted</span>();</div>
+            <div>&nbsp;&nbsp;await this.triggerLifecycle(<span class="ok">'afterInit'</span>);</div>
+            <div>}</div>
+          </div>
+          <span class="source-chip">micro-base/src/bootstrap/runner/index.ts:90-97</span>
+        </div>
+      </div>
+      <div class="page-number">06</div>
+    </section>
+
+    <section class="slide" aria-label="Slide 7">
+      <div class="kicker">06 / 主应用接入</div>
+      <h1>vmi-admin-fe 通过 bootstrapProps 和 BootstrapAppPlugin 注入项目差异</h1>
+      <div class="subtitle">基座负责流程，主应用负责传入业务配置和在生命周期里注册自己的模块。这样“通用能力”和“项目差异”可以分层。</div>
+      <div class="rule"></div>
+      <div class="content two-col">
+        <div class="card">
+          <span class="pill orange">bootstrapProps</span>
+          <h3>声明主应用身份与启动配置</h3>
+          <ul class="bullet-list">
+            <li>`business: 'SCS'`、`portal: 'PMS'`、`region`</li>
+            <li>i18n project、TSP 参数、初始路由 base</li>
+            <li>插件列表：主应用插件、远程插件、LiveTip、QMS</li>
+          </ul>
+          <span class="source-chip">vmi-admin-fe/src/bootstrap-app/props.ts:13-53</span>
+        </div>
+        <div class="card">
+          <span class="pill blue">BootstrapAppPlugin</span>
+          <h3>在生命周期里注册项目模块</h3>
+          <ul class="bullet-list">
+            <li>`beforeCreate` 执行 initAppSetting</li>
+            <li>`beforeModule` 注册本地 store、远程 user store</li>
+            <li>加载 async routes，并把它们挂到 Root 下</li>
+          </ul>
+          <span class="source-chip">vmi-admin-fe/src/bootstrap-app/plugin.ts:10-55</span>
+        </div>
+      </div>
+      <div class="talk">讲法：主应用不再自己手写完整启动流程，而是“给基座一份配置 + 一个插件”，把业务差异挂到固定时机。</div>
+      <div class="page-number">07</div>
+    </section>
+
+    <section class="slide" aria-label="Slide 8">
+      <div class="kicker">07 / Remote 加载</div>
+      <h1>Module Federation remote 是运行时 Promise，支持按环境和本地地址动态指向</h1>
+      <div class="subtitle">主应用不是写死一个远端字符串，而是注入 script 标签，加载成功后把 `window[module].get/init` 包装成 remote container。</div>
+      <div class="rule"></div>
+      <div class="content remote-map">
+        <div class="diagram">
+          <div class="remote-list">
+            <div class="remote-item"><strong>@retail/micro-base</strong><span>/micro-base/microBaseEntry.js</span></div>
+            <div class="remote-item"><strong>scsProductPms</strong><span>/scm-entry/scs-product-pms/scsProductPmsEntry.js</span></div>
+            <div class="remote-item"><strong>scmProduct</strong><span>/scm-entry/scm-product/scmProductEntry.js</span></div>
+            <div class="remote-item"><strong>scmUser / scmBasic</strong><span>/scm-entry/...Entry.js</span></div>
+          </div>
+          <div class="legend">
+            <span class="legend-item"><span class="dot orange"></span>主应用声明</span>
+            <span class="legend-item"><span class="dot blue"></span>远端容器</span>
+            <span class="legend-item"><span class="dot green"></span>业务模块</span>
+          </div>
+        </div>
+        <div>
+          <div class="code-card">
+            <div><span class="comment">// vmi-admin-fe/remotes.ts</span></div>
+            <div>const url = new URL(</div>
+            <div>&nbsp;&nbsp;defaultDomain || sessionStorage.getItem(module) || location.origin</div>
+            <div>);</div>
+            <div>url.pathname = entry;</div>
+            <div>script.src = url.toString();</div>
+            <div>script.onload = () =&gt; resolve({</div>
+            <div>&nbsp;&nbsp;get: (...args) =&gt; window[module].get(...args),</div>
+            <div>&nbsp;&nbsp;init: (...args) =&gt; window[module].init(...args)</div>
+            <div>});</div>
+          </div>
+          <span class="source-chip">vmi-admin-fe/remotes.ts:35-86</span>
+          <div class="callout" style="margin-top: 14px;">本地调试的本质：把模块名对应的域名指向 localhost，让线上/测试主应用加载本地子应用资源。</div>
+        </div>
+      </div>
+      <div class="page-number">08</div>
+    </section>
+
+    <section class="slide" aria-label="Slide 9">
+      <div class="kicker">08 / 子应用契约</div>
+      <h1>sbs-product-fe 不是暴露一个 App，而是暴露可组合的业务模块</h1>
+      <div class="subtitle">这点很关键：主应用消费的是 routes、components、domain exports，最终由主应用布局和菜单接管展示。</div>
+      <div class="rule"></div>
+      <div class="content two-col">
+        <div class="card">
+          <span class="pill green">scsProductPms</span>
+          <h3>Portal 业务模块</h3>
+          <ul class="bullet-list">
+            <li>remote name: `scsProductPms`</li>
+            <li>entry: `scsProductPmsEntry.js`</li>
+            <li>exposes: `./basic`、`./routes`、`./domains`</li>
+            <li>`productModule` 输出 `getRoutes()` 和 `getComponents()`</li>
+          </ul>
+          <span class="source-chip">projects/scs-product-pms/module.config.js:70-81</span>
+        </div>
+        <div class="card">
+          <span class="pill teal">scmProduct</span>
+          <h3>共享领域与组件</h3>
+          <ul class="bullet-list">
+            <li>remote name: `scmProduct`</li>
+            <li>exposes: `./common`、`./react`、`./domains`</li>
+            <li>给多个主/子应用复用 Product domain 能力</li>
+            <li>同样共享 React、Vue、vue-router 等 singleton</li>
+          </ul>
+          <span class="source-chip">domains/scm-product/module.config.js:72-90</span>
+        </div>
+      </div>
+      <div class="code-card" style="margin-top: 18px; font-size: 14px;">
+        <span class="comment">// 主应用消费方式：</span>
+        import { productModule } from 'scsProductPms/routes'; &nbsp; children: [...productModule.getRoutes()]
+      </div>
+      <div class="page-number">09</div>
+    </section>
+
+    <section class="slide" aria-label="Slide 10">
+      <div class="kicker">09 / 路由与菜单</div>
+      <h1>路由是主子应用拼装的核心接口，菜单只是注册后路由树的一个投影</h1>
+      <div class="subtitle">子应用输出 RouteConfig，基座负责注册到 Vue Router；主应用布局从 `registeredRoutes` 里取菜单并做权限过滤。</div>
+      <div class="rule"></div>
+      <div class="content">
+        <div class="swimlane">
+          <div class="lane-label">子应用</div>
+          <div class="lane-box green">导出 getRoutes / routeNameMap</div>
+          <div class="lane-box green">组件可为 Vue 或 React lazy</div>
+          <div class="lane-box">暴露到 remote container</div>
+          <div class="lane-box">等待主应用 import</div>
+          <div class="lane-box">业务页面渲染</div>
+          <div class="lane-label">基座</div>
+          <div class="lane-box cool">loadModule</div>
+          <div class="lane-box cool">registerRouter</div>
+          <div class="lane-box cool">必要时 React route 转 Vue</div>
+          <div class="lane-box cool">REGISTER_ROUTER 构建树</div>
+          <div class="lane-box">交给 router-view</div>
+          <div class="lane-label">主应用</div>
+          <div class="lane-box hot">productModule.getRoutes()</div>
+          <div class="lane-box hot">挂到 /product children</div>
+          <div class="lane-box hot">权限过滤</div>
+          <div class="lane-box hot">SideBar 读取 registeredRoutes</div>
+          <div class="lane-box">用户点击菜单</div>
+        </div>
+        <div class="two-col" style="margin-top: 18px;">
+          <div class="code-card">
+            <div><span class="comment">// micro-base registerRouter</span></div>
+            <div>const [vueRoute] = isReact</div>
+            <div>&nbsp;&nbsp;? convertReactRoutesToVue([route])</div>
+            <div>&nbsp;&nbsp;: [route];</div>
+            <div>router.__inner_addRoute(parentName, vueRoute);</div>
+          </div>
+          <div class="code-card">
+            <div><span class="comment">// vmi layout menus</span></div>
+            <div>const root = store.getters.registeredRoutes</div>
+            <div>&nbsp;&nbsp;.find(item =&gt; item.name === 'Root');</div>
+            <div>filterAsyncRouter([menu]);</div>
+            <div>filterPMSRoutes([...children]);</div>
+          </div>
+        </div>
+      </div>
+      <div class="page-number">10</div>
+    </section>
+
+    <section class="slide" aria-label="Slide 11">
+      <div class="kicker">10 / 共享实例</div>
+      <h1>router 和 store 用 Proxy 包一层，是为了让主子应用拿到同一套核心实例</h1>
+      <div class="subtitle">这是解决多实例问题的关键。子应用 import `@retail/micro-base/core-instance` 时，拿到的是基座维护的单例代理。</div>
+      <div class="rule"></div>
+      <div class="content two-col">
+        <div class="card">
+          <span class="pill blue">Core Instance</span>
+          <h3>router / store 单例代理</h3>
+          <ul class="bullet-list">
+            <li>`createVueRouter` 创建一次后写入 globalData</li>
+            <li>`createVuexStore` 默认注入 `registerRouterStore`</li>
+            <li>Proxy 优先读 inner 实例，兜底读 globalData</li>
+          </ul>
+          <span class="source-chip">micro-base/src/core-instance/router/index.ts:10-48</span>
+          <span class="source-chip">micro-base/src/core-instance/store/index.ts:12-58</span>
+        </div>
+        <div class="card">
+          <span class="pill orange">Host Global Data</span>
+          <h3>业务数据仍由主应用补齐</h3>
+          <ul class="bullet-list">
+            <li>`window.__GLOBAL_DATA__` 里放 API、request、constants、Utils</li>
+            <li>这是当前 product 子应用复用主应用能力的重要桥</li>
+            <li>文档目标是进一步收敛到基座 Global Data</li>
+          </ul>
+          <span class="source-chip">vmi-admin-fe/src/init-global-data.ts:20-40</span>
+        </div>
+      </div>
+      <div class="callout" style="margin-top: 18px;">讲解重点：基座已经收敛了 router/store/i18n 的核心实例；但 request/API 仍有主应用适配痕迹，这是当前架构和目标架构之间的差距。</div>
+      <div class="page-number">11</div>
+    </section>
+
+    <section class="slide" aria-label="Slide 12">
+      <div class="kicker">11 / React 与 Vue 兼容</div>
+      <h1>React 页面能跑在 Vue 主应用里，靠的是路由转换和组件容器</h1>
+      <div class="subtitle">micro-base 把 React route 包成 Vue route，把 React component 包进 Vue component；反方向也支持 React 中挂 Vue 组件。</div>
+      <div class="rule"></div>
+      <div class="content diagram">
+        <div class="flow-row four">
+          <div class="node child">
+            <strong>React Route</strong>
+            <span>component: () =&gt; lazy(...)</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="node base">
+            <strong>convertReactRoutesToVue</strong>
+            <span>替换为 ReactContainer</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="node base">
+            <strong>ReactWrapper</strong>
+            <span>createRoot 渲染 React</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="node main">
+            <strong>Vue Router View</strong>
+            <span>仍在主应用布局下展示</span>
+          </div>
+        </div>
+        <div class="two-col" style="margin-top: 22px;">
+          <div class="card tight">
+            <h3>Vue 中嵌 React</h3>
+            <p>`loadComponent({ isReact: true })` 返回一个 Vue 组件，内部使用 ReactWrapper 加载远程 React 模块。</p>
+            <span class="source-chip">micro-base/src/module/component/loadComponent.tsx:81-101</span>
+          </div>
+          <div class="card tight">
+            <h3>React 中嵌 Vue</h3>
+            <p>`loadComponent({ isVue: true })` 新建 Vue 实例，并注入同一套 router、store、i18n。</p>
+            <span class="source-chip">micro-base/src/module/component/loadComponent.tsx:104-160</span>
+          </div>
+        </div>
+      </div>
+      <div class="page-number">12</div>
+    </section>
+
+    <section class="slide" aria-label="Slide 13">
+      <div class="kicker">12 / 当前落地状态</div>
+      <h1>和文档里的目标架构相比，当前代码已经升级到“基座驱动”，但仍保留主应用适配层</h1>
+      <div class="subtitle">这不是坏事，是渐进式迁移的现实状态。讲解时要区分“目标设计”和“当前实现”。</div>
+      <div class="rule"></div>
+      <div class="content">
+        <table class="matrix">
+          <thead>
+            <tr>
+              <th>能力</th>
+              <th>目标设计</th>
+              <th>当前代码落地</th>
+              <th>你讲解时的措辞</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Bootstrap</td>
+              <td>由基座内置通用启动流程</td>
+              <td>`BootstrapApp.run()` 已在 micro-base 中收敛</td>
+              <td>“主应用把配置交给基座执行”</td>
+            </tr>
+            <tr>
+              <td>Module</td>
+              <td>子应用可独立注册路由/状态/组件</td>
+              <td>已有 load/register API；主应用仍显式 import 部分子应用模块</td>
+              <td>“正在从主应用拼装走向子应用自注册”</td>
+            </tr>
+            <tr>
+              <td>Global Data</td>
+              <td>统一收敛共享属性</td>
+              <td>基座有 setGlobalData；业务 API 仍有 `window.__GLOBAL_DATA__`</td>
+              <td>“核心实例收敛，业务共享数据仍在过渡”</td>
+            </tr>
+            <tr>
+              <td>React migrate</td>
+              <td>磨平技术栈差异</td>
+              <td>convertReactRoutesToVue / loadComponent 已落地</td>
+              <td>“Vue 宿主可以承载 React 页面”</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="page-number">13</div>
+    </section>
+
+    <section class="slide" aria-label="Slide 14">
+      <div class="kicker">13 / 本地联调</div>
+      <h1>本地联调的关键是让主应用 remote 指向本地子应用 entry</h1>
+      <div class="subtitle">启动顺序不神秘：先启动提供者，再让消费者的 remote 域名解析到本地。`remotes.ts` 已经支持 `xxxEnv` 和 `xxxLocal`。</div>
+      <div class="rule"></div>
+      <div class="content two-col">
+        <div class="card">
+          <h3>推荐启动顺序</h3>
+          <div class="code-card" style="font-size: 14px; margin-top: 10px;">
+            <div><span class="comment"># micro-base</span></div>
+            <div>yarn start <span class="comment"># localhost:8000</span></div>
+            <br>
+            <div><span class="comment"># sbs-product-fe / scs-product-pms</span></div>
+            <div>PORT=3001 pnpm start:sp</div>
+            <br>
+            <div><span class="comment"># vmi-admin-fe</span></div>
+            <div>yarn start <span class="comment"># localhost:9530</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>.env.local 覆盖示例</h3>
+          <div class="code-card" style="font-size: 14px; margin-top: 10px;">
+            <div>microBaseEnv=local</div>
+            <div>microBaseLocal=http://localhost:8000</div>
+            <br>
+            <div>scsProductPmsEnv=local</div>
+            <div>scsProductPmsLocal=http://localhost:3001</div>
+            <br>
+            <div>scmProductEnv=local</div>
+            <div>scmProductLocal=http://localhost:3002</div>
+          </div>
+          <div class="talk">如果只调一个子应用，不一定要全开；没有覆盖的 remote 默认走 test 环境资源。</div>
+        </div>
+      </div>
+      <div class="footer-source">Source: vmi-admin-fe/remotes.ts:3-29；Confluence 2184252778 本地小齿轮工具说明</div>
+      <div class="page-number">14</div>
+    </section>
+
+    <section class="slide" aria-label="Slide 15">
+      <div class="kicker">14 / 难点</div>
+      <h1>难点不在“能不能加载”，而在版本、边界、容错、权限和初始化顺序</h1>
+      <div class="subtitle">这些是讲解时最该主动点出来的风险点，也是日常排障里最常见的坑。</div>
+      <div class="rule"></div>
+      <div class="content risk-grid">
+        <div class="risk-item"><div class="risk-icon">1</div><div><strong>shared 版本冲突</strong><span>React、Vue、router、store、UI 组件被 singleton 共享，版本不齐容易产生 hook、路由或样式问题。</span></div></div>
+        <div class="risk-item"><div class="risk-icon">2</div><div><strong>publicPath / chunk 404</strong><span>remoteEntry 加载成功不代表页面成功，后续 chunk 可能因为路径不对请求错域名。</span></div></div>
+        <div class="risk-item"><div class="risk-icon">3</div><div><strong>路由 name 与权限</strong><span>菜单依赖 registeredRoutes，name 重复、meta.hidden、permissions 都会让菜单看起来“消失”。</span></div></div>
+        <div class="risk-item"><div class="risk-icon">4</div><div><strong>初始化时机</strong><span>依赖 `$gt`、i18n、global data 的模块如果过早静态 import，会出现 undefined 或语言包异常。</span></div></div>
+        <div class="risk-item"><div class="risk-icon">5</div><div><strong>业务共享数据边界</strong><span>request/API/Utils 仍有主应用注入，子应用需要知道哪些来自基座，哪些来自当前 Portal。</span></div></div>
+        <div class="risk-item"><div class="risk-icon">6</div><div><strong>错误隔离</strong><span>远程模块加载失败可能影响主流程，需要 fallback、日志和可定位的错误信息。</span></div></div>
+      </div>
+      <div class="page-number">15</div>
+    </section>
+
+    <section class="slide" aria-label="Slide 16">
+      <div class="kicker">15 / 排障路线</div>
+      <h1>排障时按“入口 - 远端 - 模块 - 注册 - 权限 - 渲染”走，不要一上来改业务页面</h1>
+      <div class="subtitle">这张可以作为你讲解后的实战页，也可以直接发给同学做自查。</div>
+      <div class="rule"></div>
+      <div class="content decision-tree">
+        <div class="tree-col">
+          <div class="tree-card"><strong>1. 页面白屏或启动失败</strong><span>看 console 第一条错误；如果是 shared/eager/module not found，先看 remoteEntry 与 shared 版本。</span></div>
+          <div class="tree-card"><strong>2. remoteEntry 404</strong><span>检查 `remotes.ts` 的 module name、entry path、env/local 配置和 Network 请求地址。</span></div>
+          <div class="tree-card"><strong>3. chunk 404</strong><span>检查子应用 `publicPath`，本地 devServer 要允许跨域并返回绝对路径资源。</span></div>
+          <div class="tree-card"><strong>4. 模块导出 undefined</strong><span>确认 exposes key 和 import key 一致，例如 `scsProductPms/routes` 是否真的导出 `productModule`。</span></div>
+        </div>
+        <div class="tree-col">
+          <div class="tree-card"><strong>5. 路由能进但菜单不显示</strong><span>看 `registeredRoutes`，再看 `meta.hidden`、`permissions`、父路由 `Root`、`isMultipleMenu` 子节点。</span></div>
+          <div class="tree-card"><strong>6. React 页面空白</strong><span>看 ReactContainer/ReactWrapper 错误，确认 component 是 lazy 函数还是 Promise import。</span></div>
+          <div class="tree-card"><strong>7. 请求或语言异常</strong><span>确认 init-global-data、i18n 初始化是否在业务模块 import 前完成。</span></div>
+          <div class="tree-card"><strong>8. 只在本地异常</strong><span>先排查本地 remote 覆盖、端口、CORS、cookie/domain，再看业务逻辑。</span></div>
+        </div>
+      </div>
+      <div class="page-number">16</div>
+    </section>
+
+    <section class="slide" aria-label="Slide 17">
+      <div class="kicker">16 / 讲解主线</div>
+      <h1>你可以按这条线讲：从协作问题出发，到运行时拼装，再落到排障方法</h1>
+      <div class="subtitle">这页是你的演讲提纲。每一段都能回到代码或文档，不需要背抽象概念。</div>
+      <div class="rule"></div>
+      <div class="content">
+        <div class="timeline">
+          <div class="time-node">
+            <div class="time-title">为什么拆</div>
+            <div class="time-desc">多团队发布耦合，主应用侵入成本高，需要业务代码自治。</div>
+          </div>
+          <div class="time-node">
+            <div class="time-title">谁负责什么</div>
+            <div class="time-desc">主应用负责壳，基座负责运行时，子应用负责业务模块。</div>
+          </div>
+          <div class="time-node">
+            <div class="time-title">怎么启动</div>
+            <div class="time-desc">BootstrapApp 创建实例，插件在生命周期里注册模块。</div>
+          </div>
+          <div class="time-node">
+            <div class="time-title">怎么拼装</div>
+            <div class="time-desc">remoteEntry 加载模块，routes/store/components 注册进同一运行时。</div>
+          </div>
+          <div class="time-node">
+            <div class="time-title">怎么排障</div>
+            <div class="time-desc">入口、远端、模块、注册、权限、渲染六步定位。</div>
+          </div>
+        </div>
+        <div class="quote" style="margin-top: 42px;">
+          收尾话术：这套架构的价值，是让不同团队的业务模块可以独立演进，同时让用户仍然看到一个统一的 Retail Portal。
+        </div>
+      </div>
+      <div class="page-number">17</div>
+    </section>
+
+    <section class="slide" aria-label="Slide 18">
+      <div class="kicker">Appendix / Sources</div>
+      <h1>资料来源与代码索引</h1>
+      <div class="subtitle">本 deck 使用两篇 Confluence 架构文档和三个本地仓库的当前代码作为依据。</div>
+      <div class="rule"></div>
+      <div class="content source-table">
+        <div class="source-row">
+          <strong>Confluence 2385944962</strong>
+          <span>Retail 主子应用独立架构优化方案：背景、目标、模块划分、Bootstrap/Module/Plugin/Global Data 设计。</span>
+          <span>Confluence pageId=2385944962</span>
+        </div>
+        <div class="source-row">
+          <strong>Confluence 2184252778</strong>
+          <span>沉淀 Micro Base - 支持多 Portal 加载 React 子应用：通用 Micro Base、Framework、加载流程、本地调试。</span>
+          <span>Confluence pageId=2184252778</span>
+        </div>
+        <div class="source-row">
+          <strong>vmi-admin-fe</strong>
+          <span>主应用：`remotes.ts`、`vue.config.ts`、`bootstrap-app`、`layout`、`init-global-data`。</span>
+          <span>/Users/.../scs/vmi-admin-fe</span>
+        </div>
+        <div class="source-row">
+          <strong>micro-base</strong>
+          <span>基座：`bootstrap/runner`、`core-instance`、`module`、`plugin`、`react-migrate`。</span>
+          <span>/Users/.../works/micro-base</span>
+        </div>
+        <div class="source-row">
+          <strong>sbs-product-fe</strong>
+          <span>子应用：`projects/scs-product-pms/module.config.js`、`src/router/index.ts`、`domains/scm-product/module.config.js`。</span>
+          <span>/Users/.../works/sbs-product-fe</span>
+        </div>
+      </div>
+      <div class="page-number">18</div>
+    </section>
+  </main>
+  <script>
+    (function () {
+      const slides = Array.from(document.querySelectorAll('.slide'));
+      function go(delta) {
+        const y = window.scrollY;
+        const current = slides.reduce((best, slide, index) => {
+          const distance = Math.abs(slide.getBoundingClientRect().top);
+          return distance < best.distance ? { index, distance } : best;
+        }, { index: 0, distance: Infinity }).index;
+        const next = Math.max(0, Math.min(slides.length - 1, current + delta));
+        slides[next].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      window.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowRight' || event.key === 'PageDown' || event.key === ' ') {
+          event.preventDefault();
+          go(1);
+        }
+        if (event.key === 'ArrowLeft' || event.key === 'PageUp') {
+          event.preventDefault();
+          go(-1);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

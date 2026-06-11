@@ -1,0 +1,177 @@
+{
+  "schema_version": "task-spec/v1",
+  "task": {
+    "id": "retail-single-config-page",
+    "name": "Retail Single Config Page",
+    "type": "page",
+    "intent": "create",
+    "target_route": "/retail/single-config",
+    "owner": "vmi-admin-fe",
+    "summary": "Create a single configuration page based on the downloaded sample-room React template.",
+    "business_goal": "Provide an editable warehouse-region configuration page with a stable template-based implementation path."
+  },
+  "sources": {
+    "prd": {
+      "title": "MVP placeholder PRD for single configuration page",
+      "inline_text": "The page should render warehouse region tabs and a ProConfig form. It should support entering edit mode, canceling edits, submitting configuration values, and showing loading state while configuration or warehouse data is being fetched.",
+      "required": true
+    },
+    "frontend_td": {
+      "title": "Template implementation reference",
+      "local_path": "../../从 0 到 1 实现生码 harness工程.md",
+      "required": false
+    },
+    "notes": []
+  },
+  "interfaces": [],
+  "template": {
+    "mode": "sample_room",
+    "source": {
+      "kind": "local_path",
+      "value": "/Users/zhuangbing.cai/Documents/works/scs/vmi-admin-fe/src/views/retail-single-config-page/index.tsx",
+      "description": "Downloaded sample-room code used as the main page-level reference."
+    },
+    "downloaded_from": "internal sample room",
+    "reference_files": [
+      {
+        "kind": "local_path",
+        "value": "/Users/zhuangbing.cai/Documents/workspace/sbs-product-fe-read/projects/template/src/views/template-table/index.tsx",
+        "description": "React list-page template that shows the sample-room annotation style and reusable hook boundaries."
+      }
+    ],
+    "reuse_notes": [
+      "Keep the page-level composition pattern: hook-driven data, generated form field definitions, existing component library.",
+      "Preserve sample-room comments only when they help the generator remove optional blocks safely."
+    ]
+  },
+  "implementation": {
+    "target_repo": "/Users/zhuangbing.cai/Documents/works/scs/vmi-admin-fe",
+    "target_files": [
+      "src/views/retail-single-config-page"
+    ],
+    "route_registry": "Route integration file will be resolved in the route integration step",
+    "framework": "react",
+    "language": "typescript",
+    "component_library": "SSC UI React and react-pro-components where the local project already uses them",
+    "request_client": "existing project request wrapper",
+    "state_management": "local React hooks following existing page pattern",
+    "i18n": "existing project translation helper",
+    "permission_model": "existing route/menu permission model"
+  },
+  "feature_model": {
+    "page_kind": "configuration_form",
+    "tabs": [
+      {
+        "name": "Warehouse region tab",
+        "component": "existing whsRegionTab from useConfig",
+        "required": true
+      }
+    ],
+    "filters": [],
+    "table_columns": [],
+    "form_fields": [
+      {
+        "name": "Surplus inbound fields",
+        "source": "SurplusInboundFields",
+        "required": true
+      },
+      {
+        "name": "Seller ASN fields",
+        "source": "SellerASNFields",
+        "required": true,
+        "notes": "Depends on allow_seller_create_and_update_asn_toggle."
+      }
+    ],
+    "actions": [
+      {
+        "name": "Edit",
+        "required": true
+      },
+      {
+        "name": "Cancel",
+        "required": true
+      },
+      {
+        "name": "Submit",
+        "required": true
+      }
+    ],
+    "states": ["loading", "editing", "viewing", "submit_success", "submit_error"],
+    "business_rules": [
+      "Seller ASN fields must react to allow_seller_create_and_update_asn_toggle.",
+      "Warehouse data loading and config loading must both block the form with a spinner."
+    ]
+  },
+  "constraints": {
+    "editable_scope": [
+      "src/views/retail-single-config-page"
+    ],
+    "read_only_scope": [
+      "src/common",
+      "src/components",
+      "src/services"
+    ],
+    "files_must_not_touch": [
+      "package.json",
+      "yarn.lock",
+      "pnpm-lock.yaml"
+    ],
+    "forbidden": [
+      "Do not change unrelated pages.",
+      "Do not add dependencies without approval.",
+      "Do not modify common request wrappers unless this task explicitly allows it."
+    ],
+    "dependency_policy": "no_new_dependencies"
+  },
+  "acceptance": {
+    "functional": [
+      "The page renders warehouse region tabs above the configuration form.",
+      "The page can enter edit mode, cancel edit mode, and submit through the hook-provided handlers.",
+      "Seller ASN form fields update when the ASN toggle value changes.",
+      "The form shows a large spinner while configuration data or warehouse data is loading."
+    ],
+    "data_contract": [
+      "All request and response field mappings must come from PRD, TD, YAPI, or existing project code.",
+      "If API fields are not provided, the agent must stop and ask before wiring network calls."
+    ],
+    "quality_gates": [
+      {
+        "name": "lint scoped page",
+        "command": "npm run lint -- src/views/retail-single-config-page",
+        "required": true
+      },
+      {
+        "name": "typecheck project",
+        "command": "npx tsc --noEmit",
+        "required": true
+      }
+    ],
+    "manual_review": [
+      "Confirm final route path and menu permission binding before release."
+    ]
+  },
+  "output": {
+    "expected_artifacts": [
+      "code_diff",
+      "validation_report",
+      "risk_notes",
+      "open_questions"
+    ],
+    "report_path": ".ai-codegen/retail-single-config-page/report.md"
+  },
+  "assumption_policy": {
+    "mode": "ask_when_missing",
+    "max_low_risk_assumptions": 1,
+    "must_stop_when": [
+      "Required API request or response fields are missing.",
+      "Target route or editable scope is unclear.",
+      "The requested change requires modifying files outside editable_scope."
+    ]
+  },
+  "unknowns": {
+    "open_questions": [],
+    "decisions_needed": [
+      "Final route registry file is intentionally deferred to the route integration step."
+    ]
+  }
+}

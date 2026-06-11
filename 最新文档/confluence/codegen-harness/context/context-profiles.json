@@ -1,0 +1,195 @@
+{
+  "schema_version": "context-profiles/v1",
+  "default_budget": {
+    "max_total_chars": 60000,
+    "max_files": 24,
+    "max_chars_per_file": 12000
+  },
+  "default_excludes": [
+    "node_modules",
+    ".git",
+    "dist",
+    "build",
+    "coverage",
+    ".cache"
+  ],
+  "profiles": {
+    "page": {
+      "description": "Frontend page generation or update. Keep requirements, template, target scope, component usage, API contracts, and validation rules stable.",
+      "required_slots": [
+        "task_contract",
+        "requirement_prd",
+        "primary_template",
+        "target_edit_scope",
+        "repo_conventions",
+        "component_usage",
+        "constraints",
+        "acceptance"
+      ],
+      "conditional_slots": [
+        {
+          "slot": "api_contracts",
+          "when": "interfaces.length > 0",
+          "fallback": "warn_and_stop_before_api_wiring"
+        }
+      ],
+      "recommended_slots": [
+        "technical_design",
+        "template_reference",
+        "similar_pages",
+        "project_rules"
+      ],
+      "slot_budgets": {
+        "task_contract": {
+          "max_files": 1,
+          "max_chars": 8000,
+          "strategy": "full"
+        },
+        "requirement_prd": {
+          "max_files": 1,
+          "max_chars": 12000,
+          "strategy": "summary_then_full_when_needed"
+        },
+        "technical_design": {
+          "max_files": 2,
+          "max_chars": 16000,
+          "strategy": "summary"
+        },
+        "api_contracts": {
+          "max_files": 8,
+          "max_chars": 18000,
+          "strategy": "typed_contract_only"
+        },
+        "primary_template": {
+          "max_files": 8,
+          "max_chars": 18000,
+          "strategy": "full_for_entry_points_summary_for_children"
+        },
+        "template_reference": {
+          "max_files": 6,
+          "max_chars": 12000,
+          "strategy": "summary"
+        },
+        "target_edit_scope": {
+          "max_files": 12,
+          "max_chars": 18000,
+          "strategy": "index_then_relevant_files"
+        },
+        "repo_conventions": {
+          "max_files": 6,
+          "max_chars": 10000,
+          "strategy": "summary"
+        },
+        "component_usage": {
+          "max_files": 8,
+          "max_chars": 12000,
+          "strategy": "docs_or_examples_only"
+        },
+        "similar_pages": {
+          "max_files": 6,
+          "max_chars": 18000,
+          "strategy": "top_matches_only"
+        },
+        "project_rules": {
+          "max_files": 6,
+          "max_chars": 8000,
+          "strategy": "summary"
+        },
+        "constraints": {
+          "max_files": 1,
+          "max_chars": 6000,
+          "strategy": "full"
+        },
+        "acceptance": {
+          "max_files": 1,
+          "max_chars": 6000,
+          "strategy": "full"
+        }
+      }
+    },
+    "component": {
+      "description": "Shared or page-local component generation. Focus on props contract, usage examples, visual states, and tests.",
+      "required_slots": [
+        "task_contract",
+        "requirement_prd",
+        "target_edit_scope",
+        "repo_conventions",
+        "component_usage",
+        "constraints",
+        "acceptance"
+      ],
+      "conditional_slots": [
+        {
+          "slot": "primary_template",
+          "when": "template.mode != none",
+          "fallback": "skip"
+        }
+      ],
+      "recommended_slots": [
+        "technical_design",
+        "similar_pages",
+        "project_rules"
+      ],
+      "slot_budgets": {}
+    },
+    "service": {
+      "description": "API service or type generation. Focus on API contract, request wrapper, call sites, and typecheck.",
+      "required_slots": [
+        "task_contract",
+        "requirement_prd",
+        "api_contracts",
+        "target_edit_scope",
+        "repo_conventions",
+        "constraints",
+        "acceptance"
+      ],
+      "conditional_slots": [],
+      "recommended_slots": [
+        "technical_design",
+        "project_rules"
+      ],
+      "slot_budgets": {}
+    },
+    "refactor": {
+      "description": "Scoped refactor. Focus on target files, call sites, tests, and forbidden scope.",
+      "required_slots": [
+        "task_contract",
+        "target_edit_scope",
+        "repo_conventions",
+        "constraints",
+        "acceptance"
+      ],
+      "conditional_slots": [],
+      "recommended_slots": [
+        "requirement_prd",
+        "similar_pages",
+        "project_rules"
+      ],
+      "slot_budgets": {}
+    },
+    "bugfix": {
+      "description": "Bug fix. Focus on reproduction, failing behavior, affected files, validation, and minimal scope.",
+      "required_slots": [
+        "task_contract",
+        "requirement_prd",
+        "target_edit_scope",
+        "repo_conventions",
+        "constraints",
+        "acceptance"
+      ],
+      "conditional_slots": [
+        {
+          "slot": "api_contracts",
+          "when": "interfaces.length > 0",
+          "fallback": "warn_and_stop_before_api_wiring"
+        }
+      ],
+      "recommended_slots": [
+        "technical_design",
+        "similar_pages",
+        "project_rules"
+      ],
+      "slot_budgets": {}
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "codegen-harness-mvp",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "validate:task": "node scripts/validate-task-spec.mjs contracts/task-spec.example.json",
+    "context:plan": "node scripts/build-context-plan.mjs contracts/task-spec.example.json",
+    "context:write": "node scripts/build-context-plan.mjs contracts/task-spec.example.json --write",
+    "check": "npm run validate:task && npm run context:plan"
+  }
+}

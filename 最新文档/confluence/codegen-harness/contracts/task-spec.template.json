@@ -1,0 +1,143 @@
+{
+  "schema_version": "task-spec/v1",
+  "task": {
+    "id": "__FILL_TASK_ID__",
+    "name": "__FILL_TASK_NAME__",
+    "type": "page",
+    "intent": "create",
+    "target_route": "__FILL_TARGET_ROUTE__",
+    "owner": "__FILL_OWNER__",
+    "summary": "__FILL_ONE_SENTENCE_SUMMARY__",
+    "business_goal": "__FILL_BUSINESS_GOAL__"
+  },
+  "sources": {
+    "prd": {
+      "title": "__FILL_PRD_TITLE__",
+      "url": "__FILL_PRD_URL_OR_DELETE__",
+      "local_path": "__FILL_PRD_LOCAL_PATH_OR_DELETE__",
+      "inline_text": "__FILL_PRD_TEXT_OR_DELETE__",
+      "required": true
+    },
+    "backend_td": {
+      "title": "__FILL_BACKEND_TD_TITLE_OR_DELETE_SECTION__",
+      "url": "__FILL_BACKEND_TD_URL_OR_DELETE__",
+      "local_path": "__FILL_BACKEND_TD_LOCAL_PATH_OR_DELETE__",
+      "inline_text": "__FILL_BACKEND_TD_TEXT_OR_DELETE__",
+      "required": false
+    },
+    "frontend_td": {
+      "title": "__FILL_FRONTEND_TD_TITLE_OR_DELETE_SECTION__",
+      "url": "__FILL_FRONTEND_TD_URL_OR_DELETE__",
+      "local_path": "__FILL_FRONTEND_TD_LOCAL_PATH_OR_DELETE__",
+      "inline_text": "__FILL_FRONTEND_TD_TEXT_OR_DELETE__",
+      "required": false
+    },
+    "notes": []
+  },
+  "interfaces": [
+    {
+      "title": "__FILL_API_TITLE__",
+      "method": "GET",
+      "path": "__FILL_API_PATH__",
+      "yapi_url": "__FILL_YAPI_URL_OR_DELETE__",
+      "required": true,
+      "request_usage": "query",
+      "notes": "__FILL_API_NOTES_OR_DELETE__"
+    }
+  ],
+  "template": {
+    "mode": "sample_room",
+    "source": {
+      "kind": "local_path",
+      "value": "__FILL_TEMPLATE_FILE_OR_DIR__",
+      "description": "Downloaded sample-room template used as the main reference."
+    },
+    "downloaded_from": "__FILL_SAMPLE_ROOM_URL_OR_DELETE__",
+    "reference_files": [],
+    "reuse_notes": [
+      "__FILL_WHICH_PARTS_SHOULD_BE_REUSED__"
+    ]
+  },
+  "implementation": {
+    "target_repo": "__FILL_TARGET_REPO_ABSOLUTE_OR_RELATIVE_PATH__",
+    "target_files": [
+      "__FILL_TARGET_FILE_OR_DIR__"
+    ],
+    "route_registry": "__FILL_ROUTE_REGISTRY_OR_DELETE__",
+    "framework": "react",
+    "language": "typescript",
+    "component_library": "SSC UI React",
+    "request_client": "__FILL_EXISTING_REQUEST_WRAPPER__",
+    "state_management": "__FILL_EXISTING_STATE_PATTERN__",
+    "i18n": "__FILL_I18N_PATTERN_OR_DELETE__",
+    "permission_model": "__FILL_PERMISSION_MODEL_OR_DELETE__"
+  },
+  "feature_model": {
+    "page_kind": "__FILL_PAGE_KIND__",
+    "tabs": [],
+    "filters": [],
+    "table_columns": [],
+    "form_fields": [],
+    "actions": [],
+    "states": ["loading", "empty", "error", "success"],
+    "business_rules": []
+  },
+  "constraints": {
+    "editable_scope": [
+      "__FILL_EDITABLE_SCOPE__"
+    ],
+    "read_only_scope": [],
+    "files_must_not_touch": [],
+    "forbidden": [
+      "Do not change unrelated pages.",
+      "Do not add dependencies without approval.",
+      "Do not modify common request wrappers unless this task explicitly allows it."
+    ],
+    "dependency_policy": "no_new_dependencies"
+  },
+  "acceptance": {
+    "functional": [
+      "__FILL_USER_VISIBLE_ACCEPTANCE__"
+    ],
+    "data_contract": [
+      "__FILL_API_OR_FIELD_ACCEPTANCE__"
+    ],
+    "quality_gates": [
+      {
+        "name": "lint",
+        "command": "__FILL_LINT_COMMAND__",
+        "required": true
+      },
+      {
+        "name": "typecheck",
+        "command": "__FILL_TYPECHECK_COMMAND__",
+        "required": true
+      }
+    ],
+    "manual_review": []
+  },
+  "output": {
+    "expected_artifacts": [
+      "code_diff",
+      "validation_report",
+      "risk_notes",
+      "open_questions"
+    ],
+    "report_path": ".ai-codegen/__FILL_TASK_ID__/report.md"
+  },
+  "assumption_policy": {
+    "mode": "ask_when_missing",
+    "max_low_risk_assumptions": 1,
+    "must_stop_when": [
+      "Required API request or response fields are missing.",
+      "Target route or editable scope is unclear.",
+      "The requested change requires modifying files outside editable_scope."
+    ]
+  },
+  "unknowns": {
+    "open_questions": [
+      "__FILL_OR_LEAVE_EMPTY_IF_READY__"
+    ],
+    "decisions_needed": []
+  }
+}

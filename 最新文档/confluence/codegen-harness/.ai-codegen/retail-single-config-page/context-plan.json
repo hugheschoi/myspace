@@ -1,0 +1,416 @@
+{
+  "schema_version": "context-plan/v1",
+  "generated_at": "2026-05-12T09:05:37.607Z",
+  "task_id": "retail-single-config-page",
+  "task_type": "page",
+  "profile": "page",
+  "status": "ready_with_warnings",
+  "budget": {
+    "max_total_chars": 60000,
+    "max_files": 24,
+    "max_chars_per_file": 12000
+  },
+  "injection_order": [
+    "task_contract",
+    "requirement_prd",
+    "technical_design",
+    "api_contracts",
+    "primary_template",
+    "template_reference",
+    "target_edit_scope",
+    "repo_conventions",
+    "component_usage",
+    "similar_pages",
+    "project_rules",
+    "constraints",
+    "acceptance"
+  ],
+  "warnings": [
+    "api_contracts: No API entries were provided. Generation may continue, but API wiring must stop until YAPI or TD fields are provided."
+  ],
+  "blocked_reasons": [],
+  "items": [
+    {
+      "slot": "task_contract",
+      "title": "Task Spec contract",
+      "requirement": "required",
+      "status": "ready",
+      "reason": "Agent needs a stable task boundary before collecting any other context.",
+      "budget": {
+        "max_total_chars": 60000,
+        "max_files": 1,
+        "max_chars_per_file": 12000,
+        "max_chars": 8000,
+        "strategy": "full"
+      },
+      "strategy": "full",
+      "sources": [
+        {
+          "type": "local_path",
+          "path": "/Users/zhuangbing.cai/Documents/md/confluence/codegen-harness/contracts/task-spec.example.json",
+          "available": true,
+          "kind": "file"
+        }
+      ],
+      "queries": [],
+      "notes": []
+    },
+    {
+      "slot": "requirement_prd",
+      "title": "Product requirement",
+      "requirement": "required",
+      "status": "ready",
+      "reason": "PRD exists and can ground functional scope.",
+      "budget": {
+        "max_total_chars": 60000,
+        "max_files": 1,
+        "max_chars_per_file": 12000,
+        "max_chars": 12000,
+        "strategy": "summary_then_full_when_needed"
+      },
+      "strategy": "summary_then_full_when_needed",
+      "sources": [
+        {
+          "type": "inline_text",
+          "title": "MVP placeholder PRD for single configuration page",
+          "available": true,
+          "chars": 236
+        }
+      ],
+      "queries": [],
+      "notes": []
+    },
+    {
+      "slot": "technical_design",
+      "title": "Technical design",
+      "requirement": "recommended",
+      "status": "ready",
+      "reason": "TD context is available or partially available.",
+      "budget": {
+        "max_total_chars": 60000,
+        "max_files": 2,
+        "max_chars_per_file": 12000,
+        "max_chars": 16000,
+        "strategy": "summary"
+      },
+      "strategy": "summary",
+      "sources": [
+        {
+          "type": "local_path",
+          "title": "Template implementation reference",
+          "path": "/Users/zhuangbing.cai/Documents/md/confluence/从 0 到 1 实现生码 harness工程.md",
+          "available": true,
+          "kind": "file"
+        }
+      ],
+      "queries": [],
+      "notes": []
+    },
+    {
+      "slot": "api_contracts",
+      "title": "API contract",
+      "requirement": "conditional",
+      "status": "warning",
+      "reason": "No API entries were provided. Generation may continue, but API wiring must stop until YAPI or TD fields are provided.",
+      "budget": {
+        "max_total_chars": 60000,
+        "max_files": 8,
+        "max_chars_per_file": 12000,
+        "max_chars": 18000,
+        "strategy": "typed_contract_only"
+      },
+      "strategy": "typed_contract_only",
+      "sources": [],
+      "queries": [],
+      "notes": []
+    },
+    {
+      "slot": "primary_template",
+      "title": "Primary template",
+      "requirement": "required",
+      "status": "ready",
+      "reason": "Primary template is available and should anchor structure and local style.",
+      "budget": {
+        "max_total_chars": 60000,
+        "max_files": 8,
+        "max_chars_per_file": 12000,
+        "max_chars": 18000,
+        "strategy": "full_for_entry_points_summary_for_children"
+      },
+      "strategy": "full_for_entry_points_summary_for_children",
+      "sources": [
+        {
+          "type": "local_path",
+          "description": "Downloaded sample-room code used as the main page-level reference.",
+          "path": "/Users/zhuangbing.cai/Documents/works/scs/vmi-admin-fe/src/views/retail-single-config-page/index.tsx",
+          "available": true,
+          "kind": "file"
+        }
+      ],
+      "queries": [],
+      "notes": [
+        "Keep the page-level composition pattern: hook-driven data, generated form field definitions, existing component library.",
+        "Preserve sample-room comments only when they help the generator remove optional blocks safely."
+      ]
+    },
+    {
+      "slot": "template_reference",
+      "title": "Template references",
+      "requirement": "recommended",
+      "status": "ready",
+      "reason": "Secondary references can help learn removable blocks and sample-room annotations.",
+      "budget": {
+        "max_total_chars": 60000,
+        "max_files": 6,
+        "max_chars_per_file": 12000,
+        "max_chars": 12000,
+        "strategy": "summary"
+      },
+      "strategy": "summary",
+      "sources": [
+        {
+          "type": "local_path",
+          "description": "React list-page template that shows the sample-room annotation style and reusable hook boundaries.",
+          "path": "/Users/zhuangbing.cai/Documents/workspace/sbs-product-fe-read/projects/template/src/views/template-table/index.tsx",
+          "available": true,
+          "kind": "file"
+        }
+      ],
+      "queries": [],
+      "notes": []
+    },
+    {
+      "slot": "target_edit_scope",
+      "title": "Target edit scope",
+      "requirement": "required",
+      "status": "ready",
+      "reason": "Target files or their create-time parent directories are available.",
+      "budget": {
+        "max_total_chars": 60000,
+        "max_files": 12,
+        "max_chars_per_file": 12000,
+        "max_chars": 18000,
+        "strategy": "index_then_relevant_files"
+      },
+      "strategy": "index_then_relevant_files",
+      "sources": [
+        {
+          "type": "local_path",
+          "path": "/Users/zhuangbing.cai/Documents/works/scs/vmi-admin-fe/src/views/retail-single-config-page",
+          "relative_path": "src/views/retail-single-config-page",
+          "available": true,
+          "kind": "directory",
+          "existing_parent": "/Users/zhuangbing.cai/Documents/works/scs/vmi-admin-fe/src/views/retail-single-config-page"
+        }
+      ],
+      "queries": [],
+      "notes": [
+        "editable_scope: src/views/retail-single-config-page",
+        "read_only_scope: src/common, src/components, src/services"
+      ]
+    },
+    {
+      "slot": "repo_conventions",
+      "title": "Repository conventions",
+      "requirement": "required",
+      "status": "ready",
+      "reason": "Project manifest and convention files are available.",
+      "budget": {
+        "max_total_chars": 60000,
+        "max_files": 6,
+        "max_chars_per_file": 12000,
+        "max_chars": 10000,
+        "strategy": "summary"
+      },
+      "strategy": "summary",
+      "sources": [
+        {
+          "type": "local_path",
+          "path": "/Users/zhuangbing.cai/Documents/works/scs/vmi-admin-fe/package.json",
+          "available": true,
+          "kind": "file"
+        },
+        {
+          "type": "local_path",
+          "path": "/Users/zhuangbing.cai/Documents/works/scs/vmi-admin-fe/tsconfig.json",
+          "available": true,
+          "kind": "file"
+        },
+        {
+          "type": "local_path",
+          "path": "/Users/zhuangbing.cai/Documents/works/scs/vmi-admin-fe/.eslintrc.js",
+          "available": true,
+          "kind": "file"
+        },
+        {
+          "type": "local_path",
+          "path": "/Users/zhuangbing.cai/Documents/works/scs/vmi-admin-fe/README.md",
+          "available": true,
+          "kind": "file"
+        }
+      ],
+      "queries": [],
+      "notes": []
+    },
+    {
+      "slot": "component_usage",
+      "title": "Component usage",
+      "requirement": "required",
+      "status": "ready",
+      "reason": "Component docs and local examples should be fetched by name instead of injecting the whole component library.",
+      "budget": {
+        "max_total_chars": 60000,
+        "max_files": 8,
+        "max_chars_per_file": 12000,
+        "max_chars": 12000,
+        "strategy": "docs_or_examples_only"
+      },
+      "strategy": "docs_or_examples_only",
+      "sources": [
+        {
+          "type": "component_library",
+          "name": "SSC UI React and react-pro-components where the local project already uses them",
+          "available": true
+        }
+      ],
+      "queries": [
+        {
+          "tool": "component_docs_or_repo_search",
+          "query": "existing whsRegionTab from useConfig"
+        },
+        {
+          "tool": "component_docs_or_repo_search",
+          "query": "SurplusInboundFields"
+        },
+        {
+          "tool": "component_docs_or_repo_search",
+          "query": "SellerASNFields"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "slot": "similar_pages",
+      "title": "Similar pages",
+      "requirement": "recommended",
+      "status": "ready",
+      "reason": "Similar pages should be searched narrowly by route, page kind, feature names, and component usage.",
+      "budget": {
+        "max_total_chars": 60000,
+        "max_files": 6,
+        "max_chars_per_file": 12000,
+        "max_chars": 18000,
+        "strategy": "top_matches_only"
+      },
+      "strategy": "top_matches_only",
+      "sources": [],
+      "queries": [
+        {
+          "tool": "repo_search",
+          "query": "configuration_form",
+          "scope": "src/views"
+        },
+        {
+          "tool": "repo_search",
+          "query": "existing whsRegionTab from useConfig",
+          "scope": "src/views"
+        },
+        {
+          "tool": "repo_search",
+          "query": "SurplusInboundFields",
+          "scope": "src/views"
+        },
+        {
+          "tool": "repo_search",
+          "query": "SellerASNFields",
+          "scope": "src/views"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "slot": "project_rules",
+      "title": "Project rules",
+      "requirement": "recommended",
+      "status": "ready",
+      "reason": "Project rules should be injected as summaries, not as broad documents.",
+      "budget": {
+        "max_total_chars": 60000,
+        "max_files": 6,
+        "max_chars_per_file": 12000,
+        "max_chars": 8000,
+        "strategy": "summary"
+      },
+      "strategy": "summary",
+      "sources": [],
+      "queries": [
+        {
+          "tool": "repo_search",
+          "query": "permission OR auth OR $gt OR i18n OR track OR actionLog",
+          "scope": "src"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "slot": "constraints",
+      "title": "Execution constraints",
+      "requirement": "required",
+      "status": "ready",
+      "reason": "Editable scope, dependency policy, and forbidden changes must stay visible throughout execution.",
+      "budget": {
+        "max_total_chars": 60000,
+        "max_files": 1,
+        "max_chars_per_file": 12000,
+        "max_chars": 6000,
+        "strategy": "full"
+      },
+      "strategy": "full",
+      "sources": [
+        {
+          "type": "task_spec_section",
+          "section": "constraints",
+          "available": true
+        }
+      ],
+      "queries": [],
+      "notes": [
+        "dependency_policy: no_new_dependencies",
+        "Do not change unrelated pages.",
+        "Do not add dependencies without approval.",
+        "Do not modify common request wrappers unless this task explicitly allows it."
+      ]
+    },
+    {
+      "slot": "acceptance",
+      "title": "Acceptance and quality gates",
+      "requirement": "required",
+      "status": "ready",
+      "reason": "Functional checks and verification commands must drive the final report and repair loop.",
+      "budget": {
+        "max_total_chars": 60000,
+        "max_files": 1,
+        "max_chars_per_file": 12000,
+        "max_chars": 6000,
+        "strategy": "full"
+      },
+      "strategy": "full",
+      "sources": [
+        {
+          "type": "task_spec_section",
+          "section": "acceptance",
+          "available": true
+        }
+      ],
+      "queries": [],
+      "notes": [
+        "The page renders warehouse region tabs above the configuration form.",
+        "The page can enter edit mode, cancel edit mode, and submit through the hook-provided handlers.",
+        "Seller ASN form fields update when the ASN toggle value changes.",
+        "The form shows a large spinner while configuration data or warehouse data is loading.",
+        "lint scoped page: npm run lint -- src/views/retail-single-config-page",
+        "typecheck project: npx tsc --noEmit"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1605 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>从 0 到 1 实现生码 Harness 工程</title>
+  <style>
+    :root {
+      --paper: #fbfaf7;
+      --ink: #17202a;
+      --muted: #657080;
+      --line: #d9dee6;
+      --soft: #eef2f4;
+      --coral: #e85d2a;
+      --amber: #f59e0b;
+      --teal: #1f9d8a;
+      --green: #2f8f5b;
+      --blue: #2f6f9f;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: #dfe3e8;
+      color: var(--ink);
+      font-family: Inter, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+    }
+
+    body {
+      padding: 28px 0;
+    }
+
+    main.deck {
+      display: grid;
+      gap: 28px;
+      justify-items: center;
+    }
+
+    .slide {
+      position: relative;
+      width: 1280px;
+      height: 720px;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      background: var(--paper);
+      box-shadow: 0 18px 60px rgba(26, 35, 49, 0.18);
+      padding: 48px 64px 46px;
+    }
+
+    .slide::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 12px;
+      height: 100%;
+      background: linear-gradient(180deg, var(--coral), var(--teal));
+    }
+
+    .slide::after {
+      content: "";
+      position: absolute;
+      right: 44px;
+      top: 34px;
+      width: 118px;
+      height: 8px;
+      border-radius: 8px;
+      background: linear-gradient(90deg, var(--coral), var(--amber), var(--teal));
+      opacity: 0.9;
+    }
+
+    .cover {
+      padding: 72px 76px 56px;
+      background:
+        linear-gradient(110deg, rgba(232, 93, 42, 0.12), rgba(31, 157, 138, 0.08) 52%, rgba(47, 111, 159, 0.12)),
+        var(--paper);
+    }
+
+    .cover::after {
+      right: 76px;
+      top: 70px;
+      width: 180px;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--coral);
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      max-width: 880px;
+      font-size: 58px;
+      line-height: 1.12;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      max-width: 990px;
+      font-size: 38px;
+      line-height: 1.16;
+      font-weight: 880;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      max-width: 920px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 20px;
+      line-height: 1.45;
+    }
+
+    .separator {
+      width: 100%;
+      height: 2px;
+      margin: 22px 0 24px;
+      background: var(--line);
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .page-number {
+      position: absolute;
+      right: 46px;
+      bottom: 28px;
+      color: #7c8793;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .footnote {
+      position: absolute;
+      left: 64px;
+      bottom: 28px;
+      color: #87909d;
+      font-size: 14px;
+    }
+
+    .cover-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 46px;
+      align-items: end;
+      margin-top: 58px;
+    }
+
+    .cover-panel {
+      border-left: 5px solid var(--coral);
+      padding-left: 22px;
+    }
+
+    .cover-panel p {
+      color: #435063;
+      font-size: 22px;
+      line-height: 1.55;
+      font-weight: 650;
+    }
+
+    .signal-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .signal {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 52px;
+      padding: 12px 16px;
+      border: 1px solid rgba(23, 32, 42, 0.12);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.66);
+      font-size: 18px;
+      font-weight: 720;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--teal);
+      flex: 0 0 auto;
+    }
+
+    .dot.coral { background: var(--coral); }
+    .dot.amber { background: var(--amber); }
+    .dot.green { background: var(--green); }
+    .dot.blue { background: var(--blue); }
+
+    .big-quote {
+      padding: 34px 40px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+      box-shadow: 0 12px 28px rgba(36, 45, 61, 0.08);
+    }
+
+    .big-quote strong {
+      color: var(--coral);
+    }
+
+    .big-quote p {
+      font-size: 31px;
+      line-height: 1.5;
+      font-weight: 780;
+    }
+
+    .five-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin-top: 26px;
+    }
+
+    .mini-card,
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 8px 20px rgba(31, 41, 55, 0.06);
+    }
+
+    .mini-card {
+      min-height: 132px;
+      padding: 18px 16px;
+    }
+
+    .mini-card .label {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 760;
+    }
+
+    .mini-card h3 {
+      margin-top: 10px;
+      font-size: 22px;
+      line-height: 1.22;
+    }
+
+    .mini-card p {
+      margin-top: 8px;
+      color: #4c5968;
+      font-size: 15px;
+      line-height: 1.38;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .three-col {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .four-col {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .card {
+      padding: 20px 22px;
+    }
+
+    .card h3 {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 23px;
+      line-height: 1.22;
+    }
+
+    .card p,
+    .card li {
+      color: #465263;
+      font-size: 17px;
+      line-height: 1.48;
+    }
+
+    .card p {
+      margin-top: 10px;
+    }
+
+    ul.clean {
+      margin: 12px 0 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 8px;
+    }
+
+    ul.clean li {
+      position: relative;
+      padding-left: 18px;
+    }
+
+    ul.clean li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.7em;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--teal);
+    }
+
+    .artifact-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-top: 24px;
+    }
+
+    .artifact {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      height: 70px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+      color: #384556;
+      font-size: 18px;
+      font-weight: 740;
+    }
+
+    .icon-box {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: var(--soft);
+      color: var(--coral);
+      font-size: 16px;
+      font-weight: 900;
+      flex: 0 0 auto;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 12px;
+      align-items: stretch;
+      margin-top: 30px;
+    }
+
+    .step {
+      position: relative;
+      min-height: 154px;
+      padding: 18px 13px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+
+    .step:not(:last-child)::after {
+      content: ">";
+      position: absolute;
+      right: -12px;
+      top: 58px;
+      width: 20px;
+      height: 28px;
+      color: var(--coral);
+      font-size: 26px;
+      font-weight: 900;
+      z-index: 2;
+    }
+
+    .step .num {
+      color: var(--coral);
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .step h3 {
+      margin-top: 10px;
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    .step p {
+      margin-top: 8px;
+      color: #576374;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .module {
+      min-height: 252px;
+      padding: 16px 13px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+
+    .module .tag {
+      color: var(--coral);
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .module h3 {
+      margin-top: 9px;
+      font-size: 19px;
+      line-height: 1.18;
+    }
+
+    .module p {
+      margin-top: 10px;
+      color: #526071;
+      font-size: 14px;
+      line-height: 1.42;
+    }
+
+    .code-window {
+      overflow: hidden;
+      border: 1px solid #ccd3dc;
+      border-radius: 8px;
+      background: #17202a;
+      box-shadow: 0 10px 22px rgba(23, 32, 42, 0.14);
+    }
+
+    .code-bar {
+      height: 34px;
+      background: #263240;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 0 14px;
+    }
+
+    .code-bar span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #f87171;
+    }
+
+    .code-bar span:nth-child(2) { background: #fbbf24; }
+    .code-bar span:nth-child(3) { background: #34d399; }
+
+    pre {
+      margin: 0;
+      padding: 17px 20px 20px;
+      color: #e6edf3;
+      font-size: 15px;
+      line-height: 1.43;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      white-space: pre-wrap;
+    }
+
+    .side-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .rule {
+      display: grid;
+      grid-template-columns: 46px 1fr;
+      gap: 14px;
+      align-items: start;
+      padding: 15px 16px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+
+    .rule strong {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      background: rgba(31, 157, 138, 0.12);
+      color: var(--teal);
+      font-size: 18px;
+    }
+
+    .rule h3 {
+      font-size: 21px;
+      line-height: 1.2;
+    }
+
+    .rule p {
+      margin-top: 5px;
+      color: #4e5a68;
+      font-size: 16px;
+      line-height: 1.36;
+    }
+
+    .context-map {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .context-card {
+      min-height: 152px;
+      padding: 18px 14px;
+      border-radius: 8px;
+      background: #fff;
+      border-top: 5px solid var(--coral);
+      box-shadow: 0 8px 18px rgba(33, 42, 55, 0.06);
+    }
+
+    .context-card:nth-child(2) { border-top-color: var(--amber); }
+    .context-card:nth-child(3) { border-top-color: var(--teal); }
+    .context-card:nth-child(4) { border-top-color: var(--green); }
+    .context-card:nth-child(5) { border-top-color: var(--blue); }
+
+    .context-card h3 {
+      font-size: 21px;
+      line-height: 1.2;
+    }
+
+    .context-card p {
+      margin-top: 9px;
+      color: #536171;
+      font-size: 15px;
+      line-height: 1.42;
+    }
+
+    .compact-list {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .compact-list div {
+      min-height: 78px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fff;
+      font-size: 17px;
+      line-height: 1.35;
+      font-weight: 720;
+      color: #384556;
+    }
+
+    .tool-table {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 13px;
+    }
+
+    .tool {
+      min-height: 106px;
+      padding: 15px 15px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .tool h3 {
+      color: #243143;
+      font-size: 20px;
+    }
+
+    .tool p {
+      margin-top: 7px;
+      color: #566272;
+      font-size: 14px;
+      line-height: 1.34;
+    }
+
+    .gate {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .gate div {
+      padding: 18px 16px;
+      border-radius: 8px;
+      color: #fff;
+      background: #263240;
+      font-size: 20px;
+      font-weight: 820;
+      text-align: center;
+    }
+
+    .gate div:nth-child(2) { background: var(--coral); }
+    .gate div:nth-child(3) { background: var(--teal); }
+    .gate div:nth-child(4) { background: var(--blue); }
+
+    .sandbox-layout {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 26px;
+      align-items: start;
+    }
+
+    .guard-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .guard {
+      padding: 16px 18px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+      font-size: 19px;
+      font-weight: 720;
+      color: #354254;
+    }
+
+    .shield {
+      min-height: 352px;
+      padding: 34px 34px;
+      border-radius: 8px;
+      background: #1f2a37;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .shield h3 {
+      font-size: 40px;
+      line-height: 1.15;
+    }
+
+    .shield p {
+      margin-top: 16px;
+      color: #cdd6e1;
+      font-size: 21px;
+      line-height: 1.5;
+    }
+
+    .verify-chain {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .verify {
+      padding: 18px 12px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+      text-align: center;
+      font-size: 18px;
+      line-height: 1.25;
+      font-weight: 800;
+    }
+
+    .matrix {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .matrix .card {
+      min-height: 152px;
+      padding: 18px 18px;
+    }
+
+    .matrix .card h3 {
+      font-size: 21px;
+    }
+
+    .matrix .card p {
+      font-size: 16px;
+      line-height: 1.38;
+    }
+
+    .failure-grid {
+      display: grid;
+      grid-template-columns: 1.02fr 0.98fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .failure-list {
+      display: grid;
+      gap: 9px;
+    }
+
+    .failure-row {
+      display: grid;
+      grid-template-columns: 154px 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: #455264;
+      font-size: 16px;
+      line-height: 1.3;
+    }
+
+    .failure-row strong {
+      color: var(--coral);
+      font-size: 17px;
+    }
+
+    .strategy {
+      display: grid;
+      gap: 14px;
+    }
+
+    .strategy div {
+      padding: 21px 22px;
+      border-radius: 8px;
+      color: #fff;
+      background: var(--teal);
+      font-size: 23px;
+      font-weight: 820;
+      line-height: 1.3;
+    }
+
+    .strategy div:nth-child(2) { background: var(--amber); color: #2d2309; }
+    .strategy div:nth-child(3) { background: #263240; }
+
+    .memory-grid {
+      display: grid;
+      grid-template-columns: 0.84fr 1.16fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .memory-question {
+      padding: 28px 30px;
+      border-radius: 8px;
+      background: #263240;
+      color: #fff;
+      min-height: 340px;
+    }
+
+    .memory-question h3 {
+      font-size: 36px;
+      line-height: 1.2;
+    }
+
+    .memory-question p {
+      margin-top: 18px;
+      color: #dce4ed;
+      font-size: 20px;
+      line-height: 1.5;
+    }
+
+    .memory-items {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .memory-item {
+      min-height: 78px;
+      padding: 16px 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      font-size: 18px;
+      line-height: 1.35;
+      font-weight: 760;
+    }
+
+    .roadmap {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .phase {
+      position: relative;
+      min-height: 388px;
+      padding: 22px 18px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .phase::before {
+      content: "";
+      position: absolute;
+      left: 18px;
+      top: 18px;
+      right: 18px;
+      height: 5px;
+      border-radius: 8px;
+      background: var(--coral);
+    }
+
+    .phase:nth-child(2)::before { background: var(--amber); }
+    .phase:nth-child(3)::before { background: var(--teal); }
+    .phase:nth-child(4)::before { background: var(--blue); }
+
+    .phase h3 {
+      margin-top: 18px;
+      font-size: 25px;
+      line-height: 1.2;
+    }
+
+    .phase .goal {
+      margin-top: 10px;
+      color: #596679;
+      font-size: 16px;
+      line-height: 1.4;
+      min-height: 66px;
+    }
+
+    .phase ul {
+      margin: 16px 0 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 7px;
+    }
+
+    .phase li {
+      color: #3f4b5a;
+      font-size: 15px;
+      line-height: 1.32;
+    }
+
+    .architecture {
+      display: grid;
+      grid-template-columns: 0.82fr 1.18fr;
+      gap: 26px;
+      align-items: center;
+    }
+
+    .arch-flow {
+      display: grid;
+      gap: 10px;
+    }
+
+    .arch-node {
+      position: relative;
+      padding: 16px 18px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+      font-size: 20px;
+      font-weight: 820;
+      text-align: center;
+    }
+
+    .arch-node:not(:last-child)::after {
+      content: "v";
+      display: block;
+      position: absolute;
+      left: 50%;
+      bottom: -18px;
+      transform: translateX(-50%);
+      color: var(--coral);
+      font-size: 20px;
+      z-index: 2;
+    }
+
+    .source-box {
+      padding: 22px 24px;
+      border-radius: 8px;
+      background: #253141;
+      color: #fff;
+    }
+
+    .source-box h3 {
+      font-size: 30px;
+      line-height: 1.2;
+    }
+
+    .source-box p {
+      margin-top: 14px;
+      color: #d5dde7;
+      font-size: 20px;
+      line-height: 1.52;
+    }
+
+    .mvp-flow {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 13px;
+    }
+
+    .mvp-step {
+      min-height: 112px;
+      padding: 15px 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .mvp-step strong {
+      color: var(--coral);
+      font-size: 16px;
+    }
+
+    .mvp-step h3 {
+      margin-top: 7px;
+      font-size: 21px;
+      line-height: 1.25;
+    }
+
+    .mvp-step p {
+      margin-top: 6px;
+      color: #596577;
+      font-size: 14px;
+      line-height: 1.32;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 13px;
+      margin-bottom: 20px;
+    }
+
+    .metric {
+      min-height: 100px;
+      padding: 16px 13px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #334155;
+      font-size: 18px;
+      font-weight: 790;
+      line-height: 1.3;
+    }
+
+    .metric.primary {
+      grid-column: span 2;
+      background: #263240;
+      color: #fff;
+      font-size: 28px;
+      line-height: 1.22;
+    }
+
+    .closing {
+      display: grid;
+      grid-template-columns: 1fr;
+      align-content: center;
+      min-height: 438px;
+    }
+
+    .principle {
+      padding: 38px 46px;
+      border-radius: 8px;
+      background: #263240;
+      color: #fff;
+    }
+
+    .principle h2 {
+      max-width: 100%;
+      color: #fff;
+      font-size: 44px;
+      line-height: 1.22;
+    }
+
+    .principle p {
+      margin-top: 22px;
+      color: #dae3ed;
+      font-size: 25px;
+      line-height: 1.5;
+      font-weight: 700;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 26px;
+    }
+
+    .pill {
+      padding: 9px 13px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+      font-size: 18px;
+      font-weight: 760;
+    }
+
+    @media print {
+      body {
+        padding: 0;
+        background: #fff;
+      }
+
+      main.deck {
+        gap: 0;
+      }
+
+      .slide {
+        box-shadow: none;
+        page-break-after: always;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck">
+    <section class="slide cover" aria-label="封面">
+      <p class="eyebrow">AI Codegen Harness</p>
+      <h1>从 0 到 1 实现生码 Harness 工程</h1>
+      <div class="cover-grid">
+        <div class="cover-panel">
+          <p>把“模型会写代码”升级为“工程体系可验证地交付代码”。</p>
+        </div>
+        <div class="signal-stack">
+          <div class="signal"><span class="dot coral"></span>输入契约</div>
+          <div class="signal"><span class="dot amber"></span>上下文工程</div>
+          <div class="signal"><span class="dot"></span>工具与沙盒</div>
+          <div class="signal"><span class="dot green"></span>自动验证与反馈</div>
+        </div>
+      </div>
+      <div class="page-number">01</div>
+    </section>
+
+    <section class="slide" aria-label="核心判断">
+      <p class="eyebrow">Core Judgment</p>
+      <h2>生码 Harness 的关键，不是换更强模型，而是给生成过程加工程约束</h2>
+      <p class="subtitle">模型能力很强，但如果缺少任务边界、项目上下文、工具管控、校验和反馈，结果会快但容易跑偏。</p>
+      <div class="separator"></div>
+      <div class="content">
+        <div class="big-quote">
+          <p>从 0 到 1 的正确姿势：先跑通一个<strong>最小闭环</strong>，再按真实失败逐层增加约束。</p>
+        </div>
+        <div class="five-grid">
+          <div class="mini-card">
+            <div class="label">Direction</div>
+            <h3>知道去哪里</h3>
+            <p>任务契约、输入规范、验收标准。</p>
+          </div>
+          <div class="mini-card">
+            <div class="label">Context</div>
+            <h3>看清路况</h3>
+            <p>PRD、TD、接口、模板、代码上下文。</p>
+          </div>
+          <div class="mini-card">
+            <div class="label">Control</div>
+            <h3>安全路线</h3>
+            <p>文件边界、权限、沙盒、工具网关。</p>
+          </div>
+          <div class="mini-card">
+            <div class="label">Feedback</div>
+            <h3>每步反馈</h3>
+            <p>lint、typecheck、测试、截图、CR。</p>
+          </div>
+          <div class="mini-card">
+            <div class="label">Memory</div>
+            <h3>失败沉淀</h3>
+            <p>归因、规则、模板、评测回流。</p>
+          </div>
+        </div>
+      </div>
+      <div class="page-number">02</div>
+    </section>
+
+    <section class="slide" aria-label="目标">
+      <p class="eyebrow">Goal</p>
+      <h2>目标不是“让 AI 写代码”，而是让 AI 在工程体系里交付代码</h2>
+      <p class="subtitle">输出形态要从文本片段升级为可验收、可复盘、可接入研发流程的任务交付包。</p>
+      <div class="separator"></div>
+      <div class="content">
+        <div class="two-col">
+          <div class="card">
+            <h3><span class="icon-box">NO</span>不止是代码片段</h3>
+            <ul class="clean">
+              <li>需求靠猜，接口靠补</li>
+              <li>结果看似完整，落地成本高</li>
+              <li>失败原因没有进入下一轮</li>
+              <li>交付质量依赖使用者经验</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3><span class="icon-box">OK</span>工程 Diff + 验证报告</h3>
+            <ul class="clean">
+              <li>代码改动、接口类型、页面实现</li>
+              <li>变更说明、验证结果、风险提示</li>
+              <li>未完成项、复盘日志、规则沉淀</li>
+              <li>能被 CI、CR 和人工验收接住</li>
+            </ul>
+          </div>
+        </div>
+        <div class="artifact-row">
+          <div class="artifact"><span class="icon-box">D</span>工程 Diff</div>
+          <div class="artifact"><span class="icon-box">T</span>类型与接口</div>
+          <div class="artifact"><span class="icon-box">V</span>验证结果</div>
+          <div class="artifact"><span class="icon-box">R</span>风险与复盘</div>
+        </div>
+      </div>
+      <div class="page-number">03</div>
+    </section>
+
+    <section class="slide" aria-label="最小闭环">
+      <p class="eyebrow">Minimum Loop</p>
+      <h2>第一版 Harness 先跑通一条最小闭环</h2>
+      <p class="subtitle">闭环跑通后，系统才从“裸奔生成”进入“可控交付”。</p>
+      <div class="separator"></div>
+      <div class="content">
+        <div class="flow">
+          <div class="step">
+            <div class="num">01</div>
+            <h3>任务输入</h3>
+            <p>把一句需求规整成 Task Spec。</p>
+          </div>
+          <div class="step">
+            <div class="num">02</div>
+            <h3>上下文收集</h3>
+            <p>读取代码、接口、组件和规范。</p>
+          </div>
+          <div class="step">
+            <div class="num">03</div>
+            <h3>生成计划</h3>
+            <p>形成文件、接口、验证计划。</p>
+          </div>
+          <div class="step">
+            <div class="num">04</div>
+            <h3>执行改码</h3>
+            <p>在受控范围内编辑代码。</p>
+          </div>
+          <div class="step">
+            <div class="num">05</div>
+            <h3>自动验证</h3>
+            <p>lint、typecheck、test、build。</p>
+          </div>
+          <div class="step">
+            <div class="num">06</div>
+            <h3>失败修复</h3>
+            <p>把错误注入上下文再修复。</p>
+          </div>
+          <div class="step">
+            <div class="num">07</div>
+            <h3>输出总结</h3>
+            <p>记录结果、风险和未完成项。</p>
+          </div>
+        </div>
+      </div>
+      <div class="page-number">04</div>
+    </section>
+
+    <section class="slide" aria-label="核心模块">
+      <p class="eyebrow">Core Modules</p>
+      <h2>Harness 的七个核心模块</h2>
+      <p class="subtitle">第一版不需要很复杂，只要每个环节职责清楚，链路就能逐渐产品化。</p>
+      <div class="separator"></div>
+      <div class="content">
+        <div class="module-grid">
+          <div class="module">
+            <div class="tag">SPEC</div>
+            <h3>Task Spec</h3>
+            <p>定义任务边界、输入来源和验收标准。</p>
+          </div>
+          <div class="module">
+            <div class="tag">CONTEXT</div>
+            <h3>Context Collector</h3>
+            <p>收集代码、接口、组件、历史页面和规范。</p>
+          </div>
+          <div class="module">
+            <div class="tag">PLAN</div>
+            <h3>Planner</h3>
+            <p>生成文件改动、接口接入和组件拆分计划。</p>
+          </div>
+          <div class="module">
+            <div class="tag">EXECUTE</div>
+            <h3>Executor</h3>
+            <p>创建页面、补类型、接接口、写状态逻辑。</p>
+          </div>
+          <div class="module">
+            <div class="tag">VERIFY</div>
+            <h3>Verifier</h3>
+            <p>执行 lint、typecheck、test、build、截图。</p>
+          </div>
+          <div class="module">
+            <div class="tag">FEEDBACK</div>
+            <h3>Feedback Loop</h3>
+            <p>把失败日志转为下一轮修复上下文。</p>
+          </div>
+          <div class="module">
+            <div class="tag">REPORT</div>
+            <h3>Reporter</h3>
+            <p>说明改了什么、如何验证、风险是什么。</p>
+          </div>
+        </div>
+      </div>
+      <div class="page-number">05</div>
+    </section>
+
+    <section class="slide" aria-label="任务输入契约">
+      <p class="eyebrow">Layer 1</p>
+      <h2>第一层约束：任务输入契约</h2>
+      <p class="subtitle">输入太散时，Agent 会猜需求、猜接口、猜组件、猜状态，稳定性自然下降。</p>
+      <div class="separator"></div>
+      <div class="content two-col">
+        <div class="code-window">
+          <div class="code-bar"><span></span><span></span><span></span></div>
+<pre>task:
+  name: 新增订单列表页
+  type: page
+  target_route: /order/list
+
+sources:
+  prd: xxx
+  yapi:
+    - /api/order/list
+
+constraints:
+  component_library: SSC UI React
+  editable_scope:
+    - src/pages/order
+
+acceptance:
+  - 支持筛选、分页、导出
+  - typecheck 通过
+  - lint 通过</pre>
+        </div>
+        <div class="side-list">
+          <div class="rule">
+            <strong>1</strong>
+            <div>
+              <h3>任务边界</h3>
+              <p>明确做什么、不做什么、目标路由和可编辑范围。</p>
+            </div>
+          </div>
+          <div class="rule">
+            <strong>2</strong>
+            <div>
+              <h3>输入来源</h3>
+              <p>把 PRD、TD、YAPI、模板和相似页面纳入契约。</p>
+            </div>
+          </div>
+          <div class="rule">
+            <strong>3</strong>
+            <div>
+              <h3>验收标准</h3>
+              <p>把功能、类型、lint、测试和禁区都写清楚。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="page-number">06</div>
+    </section>
+
+    <section class="slide" aria-label="上下文工程">
+      <p class="eyebrow">Layer 2</p>
+      <h2>第二层约束：上下文工程</h2>
+      <p class="subtitle">不是一次塞满所有资料，而是按任务类型稳定注入“必须上下文”。</p>
+      <div class="separator"></div>
+      <div class="content">
+        <div class="context-map">
+          <div class="context-card">
+            <h3>需求上下文</h3>
+            <p>PRD、TD、验收标准，回答要做什么。</p>
+          </div>
+          <div class="context-card">
+            <h3>接口上下文</h3>
+            <p>YAPI、字段类型、请求方法，回答数据从哪里来。</p>
+          </div>
+          <div class="context-card">
+            <h3>代码上下文</h3>
+            <p>目录结构、相似页面、工具函数，回答项目怎么组织。</p>
+          </div>
+          <div class="context-card">
+            <h3>组件上下文</h3>
+            <p>组件库文档、示例、API，回答 UI 怎么拼。</p>
+          </div>
+          <div class="context-card">
+            <h3>规范上下文</h3>
+            <p>权限、埋点、i18n、代码规范，回答边界和习惯。</p>
+          </div>
+        </div>
+        <div class="compact-list">
+          <div>必须注入什么</div>
+          <div>相关文件怎么检索</div>
+          <div>相似页面取几份</div>
+          <div>长文档怎么摘要</div>
+          <div>接口如何转类型</div>
+          <div>规则放在哪一层</div>
+          <div>哪些信息按需查询</div>
+          <div>如何避免上下文噪声</div>
+        </div>
+      </div>
+      <div class="page-number">07</div>
+    </section>
+
+    <section class="slide" aria-label="工具网关">
+      <p class="eyebrow">Layer 3</p>
+      <h2>第三层约束：工具网关</h2>
+      <p class="subtitle">Agent 能干活，是因为它能用工具；工具受控，生码才可审计、可恢复。</p>
+      <div class="separator"></div>
+      <div class="content">
+        <div class="tool-table">
+          <div class="tool"><h3>Repo Reader</h3><p>读取目录、文件和相似页面。</p></div>
+          <div class="tool"><h3>Component Docs</h3><p>查询组件库用法和示例。</p></div>
+          <div class="tool"><h3>YAPI Tool</h3><p>读取接口并生成类型与请求方法。</p></div>
+          <div class="tool"><h3>Code Editor</h3><p>在明确边界内修改文件。</p></div>
+          <div class="tool"><h3>Command Runner</h3><p>执行 lint、typecheck、test、build。</p></div>
+          <div class="tool"><h3>Screenshot Tool</h3><p>页面截图与视觉验证。</p></div>
+          <div class="tool"><h3>CR Tool</h3><p>规则审查、安全审查、接口审查。</p></div>
+          <div class="tool"><h3>Reporter</h3><p>生成交付报告和复盘材料。</p></div>
+        </div>
+        <div class="gate">
+          <div>Schema</div>
+          <div>权限</div>
+          <div>边界</div>
+          <div>观测</div>
+        </div>
+      </div>
+      <div class="page-number">08</div>
+    </section>
+
+    <section class="slide" aria-label="执行沙盒">
+      <p class="eyebrow">Layer 4</p>
+      <h2>第四层约束：执行沙盒</h2>
+      <p class="subtitle">沙盒不是让 Agent 变弱，而是让它可以放心地变强。</p>
+      <div class="separator"></div>
+      <div class="content sandbox-layout">
+        <div class="shield">
+          <h3>安全边界先于自动化规模</h3>
+          <p>写文件、跑命令、装依赖、调用接口都需要边界；边界稳定后，自动化才敢深入工程核心。</p>
+        </div>
+        <div class="guard-list">
+          <div class="guard">每个任务使用独立分支或 worktree</div>
+          <div class="guard">限制可编辑目录和公共基础设施改动</div>
+          <div class="guard">新增依赖、高风险命令需要人工确认</div>
+          <div class="guard">命令执行有超时和结果记录</div>
+          <div class="guard">成熟后加入容器、网络白名单和资源配额</div>
+        </div>
+      </div>
+      <div class="page-number">09</div>
+    </section>
+
+    <section class="slide" aria-label="自动验证">
+      <p class="eyebrow">Layer 5</p>
+      <h2>第五层约束：自动验证</h2>
+      <p class="subtitle">没有验证，Agent 只能靠自信；有了验证，Agent 才能靠反馈。</p>
+      <div class="separator"></div>
+      <div class="content">
+        <div class="verify-chain">
+          <div class="verify">format<br>lint</div>
+          <div class="verify">typecheck</div>
+          <div class="verify">unit test</div>
+          <div class="verify">build</div>
+          <div class="verify">screenshot</div>
+          <div class="verify">CR rules</div>
+        </div>
+        <div class="matrix">
+          <div class="card">
+            <h3>类型/接口生成</h3>
+            <p>typecheck、接口字段校验。</p>
+          </div>
+          <div class="card">
+            <h3>UI 页面</h3>
+            <p>lint、typecheck、截图。</p>
+          </div>
+          <div class="card">
+            <h3>业务逻辑</h3>
+            <p>unit test、集成测试。</p>
+          </div>
+          <div class="card">
+            <h3>公共组件</h3>
+            <p>unit test、storybook/截图、影响面分析。</p>
+          </div>
+        </div>
+      </div>
+      <div class="page-number">10</div>
+    </section>
+
+    <section class="slide" aria-label="失败处理与重规划">
+      <p class="eyebrow">Layer 6</p>
+      <h2>第六层约束：失败处理与重规划</h2>
+      <p class="subtitle">系统成熟度不在于是否失败，而在于失败后能否分类、修复和停止。</p>
+      <div class="separator"></div>
+      <div class="content failure-grid">
+        <div class="failure-list">
+          <div class="failure-row"><strong>类型错误</strong><span>注入错误日志，自动修复。</span></div>
+          <div class="failure-row"><strong>接口字段</strong><span>回查 YAPI，重新生成类型。</span></div>
+          <div class="failure-row"><strong>组件 API</strong><span>查询组件文档，替换用法。</span></div>
+          <div class="failure-row"><strong>测试失败</strong><span>定位断言，修复业务逻辑。</span></div>
+          <div class="failure-row"><strong>构建失败</strong><span>判断依赖、路径和导出问题。</span></div>
+          <div class="failure-row"><strong>需求不明</strong><span>暂停并向人提问。</span></div>
+          <div class="failure-row"><strong>越权修改</strong><span>回滚该部分改动并上报。</span></div>
+        </div>
+        <div class="strategy">
+          <div>可确定问题：自动修 1-3 轮</div>
+          <div>不确定问题：停止并输出问题</div>
+          <div>高风险问题：请求人工确认</div>
+        </div>
+      </div>
+      <div class="page-number">11</div>
+    </section>
+
+    <section class="slide" aria-label="记忆与经验沉淀">
+      <p class="eyebrow">Layer 7</p>
+      <h2>第七层约束：记忆与经验沉淀</h2>
+      <p class="subtitle">真正的驯化，是让 Agent 下次少犯同类错误。</p>
+      <div class="separator"></div>
+      <div class="content memory-grid">
+        <div class="memory-question">
+          <h3>每次失败后都问：这个问题应该沉淀成什么？</h3>
+          <p>Harness 的核心理念，是不要让模型在同一个坑里反复摔。</p>
+        </div>
+        <div class="memory-items">
+          <div class="memory-item">项目规则</div>
+          <div class="memory-item">模板改进</div>
+          <div class="memory-item">组件示例</div>
+          <div class="memory-item">接口类型生成规则</div>
+          <div class="memory-item">测试用例</div>
+          <div class="memory-item">CR 检查项</div>
+          <div class="memory-item">Prompt 约束</div>
+          <div class="memory-item">工具能力</div>
+        </div>
+      </div>
+      <div class="page-number">12</div>
+    </section>
+
+    <section class="slide" aria-label="迭代路线">
+      <p class="eyebrow">Roadmap</p>
+      <h2>从 0 到 1 的迭代路线</h2>
+      <p class="subtitle">不要一开始造大平台；从人工辅助到最小闭环，再走向平台化和规模化。</p>
+      <div class="separator"></div>
+      <div class="content">
+        <div class="roadmap">
+          <div class="phase">
+            <h3>P0 人工辅助型</h3>
+            <p class="goal">让 Agent 按规范生成代码，但主要由人提供上下文。</p>
+            <ul>
+              <li>任务模板</li>
+              <li>固定 Prompt</li>
+              <li>人工贴 PRD/TD/YAPI</li>
+              <li>Agent 改码</li>
+              <li>人工跑验证</li>
+            </ul>
+          </div>
+          <div class="phase">
+            <h3>P1 最小闭环</h3>
+            <p class="goal">让 Agent 自动收集基本上下文，并能自动验证。</p>
+            <ul>
+              <li>Task Spec</li>
+              <li>相似页面和组件文档</li>
+              <li>读取 YAPI</li>
+              <li>自动跑 lint/typecheck</li>
+              <li>失败后修复 1-2 轮</li>
+            </ul>
+          </div>
+          <div class="phase">
+            <h3>P2 可控平台</h3>
+            <p class="goal">让生码过程具备权限、边界、审计和可恢复能力。</p>
+            <ul>
+              <li>工具网关</li>
+              <li>文件范围控制</li>
+              <li>命令白名单</li>
+              <li>检查点</li>
+              <li>CR Shift-Left</li>
+            </ul>
+          </div>
+          <div class="phase">
+            <h3>P3 规模化 Harness</h3>
+            <p class="goal">让系统能持续学习，并在更多任务类型里复制。</p>
+            <ul>
+              <li>任务类型分类</li>
+              <li>多模板体系</li>
+              <li>评测集</li>
+              <li>历史失败记忆</li>
+              <li>CI/CD 集成</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="page-number">13</div>
+    </section>
+
+    <section class="slide" aria-label="推荐架构">
+      <p class="eyebrow">Architecture</p>
+      <h2>推荐架构：脚本、Prompt、MCP 工具和本地命令先拼通</h2>
+      <p class="subtitle">先把链路跑通，再把稳定部分产品化。</p>
+      <div class="separator"></div>
+      <div class="content architecture">
+        <div class="source-box">
+          <h3>上下文来源</h3>
+          <p>PRD / TD / YAPI / Repo / Components / Rules 统一进入 Context Collector，再由 Planner 生成可执行计划。</p>
+        </div>
+        <div class="arch-flow">
+          <div class="arch-node">Task Spec</div>
+          <div class="arch-node">Context Collector</div>
+          <div class="arch-node">Planner</div>
+          <div class="arch-node">Executor</div>
+          <div class="arch-node">Verifier</div>
+          <div class="arch-node">Report / Feedback + Replan</div>
+        </div>
+      </div>
+      <div class="page-number">14</div>
+    </section>
+
+    <section class="slide" aria-label="MVP">
+      <p class="eyebrow">MVP</p>
+      <h2>MVP 先支持一个高频场景：基于模板生成列表页</h2>
+      <p class="subtitle">不要追求覆盖所有页面，只追求一个场景稳定闭环。</p>
+      <div class="separator"></div>
+      <div class="content">
+        <div class="mvp-flow">
+          <div class="mvp-step"><strong>01</strong><h3>读取 Task Spec</h3><p>确认 PRD、TD、YAPI、目标路由。</p></div>
+          <div class="mvp-step"><strong>02</strong><h3>拉取上下文</h3><p>读取文档、接口和模板目录。</p></div>
+          <div class="mvp-step"><strong>03</strong><h3>找相似列表页</h3><p>对齐项目组织方式和交互习惯。</p></div>
+          <div class="mvp-step"><strong>04</strong><h3>生成类型与请求</h3><p>接口字段与 YAPI 对齐。</p></div>
+          <div class="mvp-step"><strong>05</strong><h3>基于模板生成页面</h3><p>接入筛选、表格、分页。</p></div>
+          <div class="mvp-step"><strong>06</strong><h3>补齐页面状态</h3><p>loading、empty、error、导出。</p></div>
+          <div class="mvp-step"><strong>07</strong><h3>跑验证</h3><p>lint、typecheck 和必要截图。</p></div>
+          <div class="mvp-step"><strong>08</strong><h3>失败自动修复</h3><p>把日志注入上下文再执行。</p></div>
+          <div class="mvp-step"><strong>09</strong><h3>输出报告</h3><p>变更说明、验证结果和风险。</p></div>
+        </div>
+      </div>
+      <div class="page-number">15</div>
+    </section>
+
+    <section class="slide" aria-label="度量指标">
+      <p class="eyebrow">Metrics</p>
+      <h2>判断是否 Harness 化成功，看质量指标是否持续改善</h2>
+      <p class="subtitle">最重要的是“同类问题复发率”：复发越多，说明还没有沉淀成工程约束。</p>
+      <div class="separator"></div>
+      <div class="content">
+        <div class="metric-grid">
+          <div class="metric primary">同类问题<br>复发率</div>
+          <div class="metric">首次生成<br>可编译率</div>
+          <div class="metric">自动修复<br>成功率</div>
+          <div class="metric">人工返工<br>次数</div>
+          <div class="metric">PR 审查<br>问题数</div>
+          <div class="metric">接口字段<br>错误数</div>
+          <div class="metric">平均交付<br>时长</div>
+          <div class="metric">平均 Token<br>成本</div>
+          <div class="metric">工具调用<br>失败率</div>
+          <div class="metric">越权修改<br>次数</div>
+        </div>
+        <div class="big-quote">
+          <p>如果一个坑反复出现，说明它还没有被规则、模板、工具或评测真正接住。</p>
+        </div>
+      </div>
+      <div class="page-number">16</div>
+    </section>
+
+    <section class="slide" aria-label="落地原则">
+      <p class="eyebrow">Principle</p>
+      <h2>一句话落地原则</h2>
+      <p class="subtitle">从 0 到 1 做 Harness，先在窄场景里做到稳定闭环。</p>
+      <div class="separator"></div>
+      <div class="content closing">
+        <div class="principle">
+          <h2>输入清楚、上下文充分、工具受控、执行安全、验证自动、失败可修、经验可沉淀。</h2>
+          <p>这时它才不再只是生码能力，而是开始具备工程交付能力的可驯化生产力。</p>
+          <div class="pill-row">
+            <span class="pill">Task Spec</span>
+            <span class="pill">Context</span>
+            <span class="pill">Gateway</span>
+            <span class="pill">Sandbox</span>
+            <span class="pill">Verifier</span>
+            <span class="pill">Feedback</span>
+            <span class="pill">Memory</span>
+          </div>
+        </div>
+      </div>
+      <div class="page-number">17</div>
+    </section>
+  </main>
+</body>
+</html>

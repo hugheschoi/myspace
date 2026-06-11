@@ -1,0 +1,984 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Codex 最佳实践总结</title>
+  <style>
+    :root {
+      --paper: #fbfaf7;
+      --ink: #17202a;
+      --muted: #657080;
+      --line: #d9dee6;
+      --soft: #eef2f4;
+      --coral: #e85d2a;
+      --amber: #f59e0b;
+      --teal: #1f9d8a;
+      --green: #2f8f5b;
+      --blue: #2f6f9f;
+      --violet: #6b5fb5;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: #dfe3e8;
+      color: var(--ink);
+      font-family: Inter, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+    }
+
+    body {
+      padding: 28px 0;
+    }
+
+    main.deck {
+      display: grid;
+      gap: 28px;
+      justify-items: center;
+    }
+
+    .slide {
+      position: relative;
+      width: 1280px;
+      height: 720px;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      background: var(--paper);
+      box-shadow: 0 18px 60px rgba(26, 35, 49, 0.18);
+      padding: 48px 64px 46px;
+    }
+
+    .slide::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 12px;
+      height: 100%;
+      background: linear-gradient(180deg, var(--coral), var(--teal));
+    }
+
+    .slide::after {
+      content: "";
+      position: absolute;
+      right: 44px;
+      top: 34px;
+      width: 118px;
+      height: 8px;
+      border-radius: 8px;
+      background: linear-gradient(90deg, var(--coral), var(--amber), var(--teal));
+      opacity: 0.9;
+    }
+
+    .cover {
+      padding: 72px 76px 56px;
+      background:
+        linear-gradient(110deg, rgba(232, 93, 42, 0.12), rgba(31, 157, 138, 0.08) 52%, rgba(47, 111, 159, 0.12)),
+        var(--paper);
+    }
+
+    .cover::after {
+      right: 76px;
+      top: 70px;
+      width: 180px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      max-width: 880px;
+      font-size: 58px;
+      line-height: 1.12;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      max-width: 990px;
+      font-size: 38px;
+      line-height: 1.16;
+      font-weight: 880;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      color: var(--ink);
+      font-size: 21px;
+      line-height: 1.22;
+      font-weight: 830;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--coral);
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      max-width: 930px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 20px;
+      line-height: 1.45;
+    }
+
+    .separator {
+      width: 100%;
+      height: 2px;
+      margin: 22px 0 24px;
+      background: var(--line);
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .page-number {
+      position: absolute;
+      right: 46px;
+      bottom: 28px;
+      color: #7c8793;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .footnote {
+      position: absolute;
+      left: 64px;
+      bottom: 28px;
+      color: #87909d;
+      font-size: 14px;
+    }
+
+    .cover-grid {
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 46px;
+      align-items: end;
+      margin-top: 58px;
+    }
+
+    .cover-panel {
+      border-left: 5px solid var(--coral);
+      padding-left: 22px;
+    }
+
+    .cover-panel p {
+      color: #435063;
+      font-size: 22px;
+      line-height: 1.55;
+      font-weight: 650;
+    }
+
+    .signal-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .signal {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 52px;
+      padding: 12px 16px;
+      border: 1px solid rgba(23, 32, 42, 0.12);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.66);
+      font-size: 18px;
+      font-weight: 720;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--teal);
+      flex: 0 0 auto;
+    }
+
+    .dot.coral { background: var(--coral); }
+    .dot.amber { background: var(--amber); }
+    .dot.green { background: var(--green); }
+    .dot.blue { background: var(--blue); }
+    .dot.violet { background: var(--violet); }
+
+    .big-quote {
+      padding: 34px 40px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+      box-shadow: 0 12px 28px rgba(36, 45, 61, 0.08);
+    }
+
+    .big-quote p {
+      font-size: 31px;
+      line-height: 1.42;
+      font-weight: 780;
+    }
+
+    .big-quote strong {
+      color: var(--coral);
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .three-col {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .four-col {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .card {
+      min-height: 142px;
+      padding: 20px 20px 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 8px 22px rgba(36, 45, 61, 0.07);
+    }
+
+    .compact-card {
+      min-height: 106px;
+      padding: 16px 17px 15px;
+    }
+
+    .card p,
+    .compact-card p {
+      margin-top: 8px;
+      color: #536070;
+      font-size: 17px;
+      line-height: 1.42;
+      font-weight: 520;
+    }
+
+    .num-badge {
+      display: inline-grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      margin-bottom: 12px;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--coral);
+      font-size: 18px;
+      font-weight: 850;
+    }
+
+    .num-badge.teal { background: var(--teal); }
+    .num-badge.amber { background: var(--amber); }
+    .num-badge.green { background: var(--green); }
+    .num-badge.blue { background: var(--blue); }
+    .num-badge.violet { background: var(--violet); }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+      margin-top: 34px;
+      align-items: stretch;
+    }
+
+    .flow-item {
+      position: relative;
+      min-height: 96px;
+      padding: 16px 12px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid rgba(23, 32, 42, 0.12);
+      text-align: center;
+      font-size: 16px;
+      line-height: 1.32;
+      font-weight: 760;
+      display: grid;
+      align-items: center;
+    }
+
+    .flow-item:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      right: -8px;
+      top: 50%;
+      width: 12px;
+      height: 2px;
+      background: #aab3bd;
+    }
+
+    .table {
+      display: grid;
+      gap: 10px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 18px;
+      align-items: center;
+      min-height: 56px;
+      padding: 12px 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .row strong {
+      color: var(--ink);
+      font-size: 18px;
+    }
+
+    .row span {
+      color: #536070;
+      font-size: 17px;
+      line-height: 1.38;
+    }
+
+    .tag-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: var(--soft);
+      color: #344053;
+      font-size: 16px;
+      font-weight: 720;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 0.86fr 1.14fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    .metric {
+      min-height: 180px;
+      padding: 26px 28px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+
+    .metric .value {
+      color: var(--coral);
+      font-size: 54px;
+      line-height: 1;
+      font-weight: 920;
+    }
+
+    .metric p {
+      margin-top: 12px;
+      color: #445166;
+      font-size: 21px;
+      line-height: 1.42;
+      font-weight: 680;
+    }
+
+    .level-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .level {
+      min-height: 244px;
+      padding: 22px 19px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+
+    .level h3 {
+      font-size: 27px;
+      color: var(--coral);
+    }
+
+    .level p {
+      margin-top: 14px;
+      color: #536070;
+      font-size: 18px;
+      line-height: 1.46;
+      font-weight: 560;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 11px;
+    }
+
+    .check {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 12px;
+      align-items: start;
+      min-height: 46px;
+      padding: 10px 13px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid rgba(23, 32, 42, 0.1);
+    }
+
+    .check .mark {
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: var(--teal);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 850;
+      display: grid;
+      place-items: center;
+    }
+
+    .check p {
+      color: #4d5a6b;
+      font-size: 18px;
+      line-height: 1.38;
+      font-weight: 610;
+    }
+
+    .mistake-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px 18px;
+    }
+
+    .mistake {
+      display: grid;
+      grid-template-columns: 18px 1fr;
+      gap: 10px;
+      align-items: start;
+      min-height: 54px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+
+    .mistake .bar {
+      width: 8px;
+      height: 100%;
+      min-height: 30px;
+      border-radius: 8px;
+      background: var(--coral);
+    }
+
+    .mistake p {
+      color: #4d5a6b;
+      font-size: 16px;
+      line-height: 1.36;
+      font-weight: 610;
+    }
+
+    .roadmap {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-top: 16px;
+    }
+
+    .step {
+      min-height: 254px;
+      padding: 22px 20px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+      position: relative;
+    }
+
+    .step::before {
+      content: "";
+      display: block;
+      width: 48px;
+      height: 5px;
+      border-radius: 5px;
+      margin-bottom: 18px;
+      background: var(--coral);
+    }
+
+    .step:nth-child(2)::before { background: var(--amber); }
+    .step:nth-child(3)::before { background: var(--teal); }
+    .step:nth-child(4)::before { background: var(--blue); }
+
+    .step p {
+      margin-top: 12px;
+      color: #536070;
+      font-size: 18px;
+      line-height: 1.46;
+      font-weight: 560;
+    }
+
+    @media print {
+      body {
+        padding: 0;
+        background: #fff;
+      }
+
+      main.deck {
+        display: block;
+      }
+
+      .slide {
+        margin: 0;
+        box-shadow: none;
+        page-break-after: always;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck">
+    <section class="slide cover" aria-label="封面">
+      <p class="eyebrow">OpenAI Developers / Codex</p>
+      <h1>Codex 最佳实践总结</h1>
+      <p class="subtitle">把 Codex 从一次性助手，升级为可配置、可复用、可自动化的工程队友。</p>
+      <div class="cover-grid">
+        <div class="cover-panel">
+          <p>来源：OpenAI Developers - Best practices。本文档为中文转述和结构化总结，聚焦团队落地。</p>
+        </div>
+        <div class="signal-stack">
+          <div class="signal"><span class="dot coral"></span><span>Prompt 结构化</span></div>
+          <div class="signal"><span class="dot amber"></span><span>规则可复用</span></div>
+          <div class="signal"><span class="dot teal"></span><span>验证自动化</span></div>
+          <div class="signal"><span class="dot blue"></span><span>流程可规模化</span></div>
+        </div>
+      </div>
+      <div class="footnote">Source: developers.openai.com/codex/learn/best-practices</div>
+      <div class="page-number">1 / 14</div>
+    </section>
+
+    <section class="slide" aria-label="核心判断">
+      <div class="content">
+        <p class="eyebrow">01 / Core idea</p>
+        <h2>Codex 的关键不是一次问答，而是持续配置和改进</h2>
+        <div class="separator"></div>
+        <div class="big-quote">
+          <p>成熟用法是把 Codex 当作<strong>工程队友</strong>：给它上下文、规则、权限边界、验证方式和可复用工具。</p>
+        </div>
+        <div class="flow">
+          <div class="flow-item">任务上下文</div>
+          <div class="flow-item">Plan</div>
+          <div class="flow-item">AGENTS.md</div>
+          <div class="flow-item">config.toml</div>
+          <div class="flow-item">测试评审</div>
+          <div class="flow-item">MCP / Skills</div>
+          <div class="flow-item">Automation</div>
+        </div>
+      </div>
+      <div class="footnote">核心主线：从一次性提示，走向可复用的工程系统。</div>
+      <div class="page-number">2 / 14</div>
+    </section>
+
+    <section class="slide" aria-label="第一次用好">
+      <div class="content">
+        <p class="eyebrow">02 / Prompt</p>
+        <h2>第一次用好：给 Codex 四块任务上下文</h2>
+        <p class="subtitle">Prompt 不必完美，但在大型仓库和高风险任务中，结构化上下文会显著减少猜测。</p>
+        <div class="separator"></div>
+        <div class="four-col">
+          <div class="card">
+            <span class="num-badge">1</span>
+            <h3>Goal</h3>
+            <p>要修什么、建什么、改变什么行为。</p>
+          </div>
+          <div class="card">
+            <span class="num-badge amber">2</span>
+            <h3>Context</h3>
+            <p>相关文件、目录、文档、报错和可参考实现。</p>
+          </div>
+          <div class="card">
+            <span class="num-badge teal">3</span>
+            <h3>Constraints</h3>
+            <p>架构规范、安全边界、依赖限制和团队约定。</p>
+          </div>
+          <div class="card">
+            <span class="num-badge blue">4</span>
+            <h3>Done when</h3>
+            <p>测试通过、行为改变、缺陷不再复现等完成标准。</p>
+          </div>
+        </div>
+        <div class="tag-line">
+          <span class="tag">少猜测</span>
+          <span class="tag">更聚焦</span>
+          <span class="tag">更容易 review</span>
+          <span class="tag">更适合复杂仓库</span>
+        </div>
+      </div>
+      <div class="footnote">提示词重点：说清目标、上下文、约束和验收。</div>
+      <div class="page-number">3 / 14</div>
+    </section>
+
+    <section class="slide" aria-label="Reasoning level">
+      <div class="content">
+        <p class="eyebrow">03 / Reasoning level</p>
+        <h2>按任务难度选择推理强度</h2>
+        <p class="subtitle">不同任务需要不同的思考深度。速度和可靠性之间，可以按任务风险做选择。</p>
+        <div class="separator"></div>
+        <div class="level-grid">
+          <div class="level">
+            <h3>Low</h3>
+            <p>适合小范围、目标明确、低风险任务。追求快速反馈。</p>
+          </div>
+          <div class="level">
+            <h3>Medium</h3>
+            <p>适合常规开发和局部调试。兼顾速度与分析。</p>
+          </div>
+          <div class="level">
+            <h3>High</h3>
+            <p>适合跨文件变更、复杂 bug、需要综合上下文的任务。</p>
+          </div>
+          <div class="level">
+            <h3>Extra High</h3>
+            <p>适合长周期、多步骤、agentic、推理密集型任务。</p>
+          </div>
+        </div>
+      </div>
+      <div class="footnote">实践原则：任务越复杂，越要用更强计划和验证闭环。</div>
+      <div class="page-number">4 / 14</div>
+    </section>
+
+    <section class="slide" aria-label="Plan first">
+      <div class="content">
+        <p class="eyebrow">04 / Plan first</p>
+        <h2>复杂任务先 Plan，再编码</h2>
+        <p class="subtitle">Plan Mode 的价值是把模糊任务变成可执行、可验证的工程计划。</p>
+        <div class="separator"></div>
+        <div class="split">
+          <div class="metric">
+            <div class="value">先想清</div>
+            <p>复杂、模糊、跨模块任务，不要急着改代码。先让 Codex 收集上下文、追问边界、拆解路径。</p>
+          </div>
+          <div class="table">
+            <div class="row">
+              <strong>Plan Mode</strong>
+              <span>适合大多数复杂任务，让 Codex 先探索、澄清、形成计划。</span>
+            </div>
+            <div class="row">
+              <strong>Interview</strong>
+              <span>需求还不清楚时，让 Codex 先采访你并挑战假设。</span>
+            </div>
+            <div class="row">
+              <strong>PLANS.md</strong>
+              <span>团队可为长任务约定固定计划模板和执行检查点。</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footnote">适用场景：复杂、模糊、高风险、难以一次说明白的任务。</div>
+      <div class="page-number">5 / 14</div>
+    </section>
+
+    <section class="slide" aria-label="AGENTS.md">
+      <div class="content">
+        <p class="eyebrow">05 / AGENTS.md</p>
+        <h2>把有效提示沉淀成 `AGENTS.md`</h2>
+        <p class="subtitle">当一种提示方式反复有效，就不该每次手动重复。让仓库自己携带 agent 工作规则。</p>
+        <div class="separator"></div>
+        <div class="three-col">
+          <div class="card">
+            <h3>项目怎么跑</h3>
+            <p>目录结构、启动方式、构建、测试、lint、typecheck 命令。</p>
+          </div>
+          <div class="card">
+            <h3>代码怎么写</h3>
+            <p>工程约定、PR 期望、架构边界、review checklist。</p>
+          </div>
+          <div class="card">
+            <h3>什么不要做</h3>
+            <p>权限限制、依赖限制、禁止改动范围、验收标准。</p>
+          </div>
+        </div>
+        <div class="big-quote" style="margin-top: 22px; padding: 24px 30px;">
+          <p style="font-size: 25px;">短、准、真实的 `AGENTS.md`，比长而空泛的规则更有用。</p>
+        </div>
+      </div>
+      <div class="footnote">当 Codex 同类错误出现第二次，就把复盘结论沉淀成规则。</div>
+      <div class="page-number">6 / 14</div>
+    </section>
+
+    <section class="slide" aria-label="config.toml">
+      <div class="content">
+        <p class="eyebrow">06 / Configuration</p>
+        <h2>用 `config.toml` 让行为跨会话一致</h2>
+        <p class="subtitle">很多质量问题其实是环境问题：目录、权限、模型默认值、工具和连接器没有配好。</p>
+        <div class="separator"></div>
+        <div class="two-col">
+          <div class="table">
+            <div class="row">
+              <strong>个人默认</strong>
+              <span>`~/.codex/config.toml` 放个人偏好和常用配置。</span>
+            </div>
+            <div class="row">
+              <strong>仓库规则</strong>
+              <span>`.codex/config.toml` 放项目专属行为和工具配置。</span>
+            </div>
+            <div class="row">
+              <strong>临时覆盖</strong>
+              <span>CLI 参数只用于一次性任务，不替代长期配置。</span>
+            </div>
+          </div>
+          <div class="card" style="min-height: 206px;">
+            <h3>配置维度</h3>
+            <p>model、reasoning effort、sandbox mode、approval policy、profiles、MCP、feature flags。</p>
+            <div class="tag-line">
+              <span class="tag">默认保守</span>
+              <span class="tag">按需放宽</span>
+              <span class="tag">可信仓库</span>
+              <span class="tag">可复现</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footnote">权限建议：新手先严格，熟悉工作流后再为可信项目放宽。</div>
+      <div class="page-number">7 / 14</div>
+    </section>
+
+    <section class="slide" aria-label="测试和评审">
+      <div class="content">
+        <p class="eyebrow">07 / Reliability</p>
+        <h2>不要只让 Codex 改代码，也要让它验证和 review</h2>
+        <p class="subtitle">Prompt 或 `AGENTS.md` 要写清楚什么叫“好”，Codex 才能完成可靠闭环。</p>
+        <div class="separator"></div>
+        <div class="checklist">
+          <div class="check"><span class="mark">✓</span><p>为变更补充或更新必要测试。</p></div>
+          <div class="check"><span class="mark">✓</span><p>运行相关测试套件，必要时补跑构建、lint、格式化和类型检查。</p></div>
+          <div class="check"><span class="mark">✓</span><p>确认最终行为与请求一致，而不只是代码能编译。</p></div>
+          <div class="check"><span class="mark">✓</span><p>对 diff 做一次 bug、回归和风险模式 review。</p></div>
+          <div class="check"><span class="mark">✓</span><p>把团队 review 标准写进 `code_review.md`，再从 `AGENTS.md` 引用。</p></div>
+        </div>
+      </div>
+      <div class="footnote">Codex 不只生成代码，也能参与测试、检查和评审。</div>
+      <div class="page-number">8 / 14</div>
+    </section>
+
+    <section class="slide" aria-label="MCP">
+      <div class="content">
+        <p class="eyebrow">08 / MCP</p>
+        <h2>用 MCP 连接仓库外的动态上下文</h2>
+        <p class="subtitle">当上下文在外部系统里，复制粘贴就会变成瓶颈。MCP 让 Codex 直接使用工具。</p>
+        <div class="separator"></div>
+        <div class="two-col">
+          <div class="card" style="min-height: 278px;">
+            <h3>什么时候用 MCP</h3>
+            <p>信息不在仓库里、变化频繁、需要可重复集成，或希望 Codex 调工具而不是读一次性文本。</p>
+            <div class="tag-line">
+              <span class="tag">Jira</span>
+              <span class="tag">Confluence</span>
+              <span class="tag">GitHub</span>
+              <span class="tag">Slack</span>
+              <span class="tag">YAPI</span>
+            </div>
+          </div>
+          <div class="card" style="min-height: 278px;">
+            <h3>怎么接入更稳</h3>
+            <p>不要一开始接满所有工具。先选一两个能消除手工复制、重复查询的工具，再根据真实摩擦扩展。</p>
+            <div class="tag-line">
+              <span class="tag">少而准</span>
+              <span class="tag">可复用</span>
+              <span class="tag">可授权</span>
+              <span class="tag">可审计</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footnote">文章提到 Codex 支持 STDIO 和 Streamable HTTP MCP servers with OAuth。</div>
+      <div class="page-number">9 / 14</div>
+    </section>
+
+    <section class="slide" aria-label="Skills">
+      <div class="content">
+        <p class="eyebrow">09 / Skills</p>
+        <h2>把重复工作产品化为 Skills</h2>
+        <p class="subtitle">如果你反复复用同一段 Prompt，或反复纠正同一流程，就该考虑写成 Skill。</p>
+        <div class="separator"></div>
+        <div class="three-col">
+          <div class="card compact-card">
+            <h3>一个 Skill，一个任务</h3>
+            <p>从 2 到 3 个真实 use case 起步。</p>
+          </div>
+          <div class="card compact-card">
+            <h3>定义输入输出</h3>
+            <p>让触发场景、产物和边界清楚。</p>
+          </div>
+          <div class="card compact-card">
+            <h3>必要时加脚本</h3>
+            <p>只有能提升可靠性时才加入资产或脚本。</p>
+          </div>
+        </div>
+        <div class="tag-line" style="margin-top: 28px;">
+          <span class="tag">日志排查</span>
+          <span class="tag">发布说明</span>
+          <span class="tag">PR review</span>
+          <span class="tag">迁移计划</span>
+          <span class="tag">事故摘要</span>
+          <span class="tag">标准调试流</span>
+        </div>
+        <div class="big-quote" style="margin-top: 28px; padding: 24px 30px;">
+          <p style="font-size: 25px;">Skills 是把“我总是这样做”变成“系统默认会这样做”。</p>
+        </div>
+      </div>
+      <div class="footnote">Skill 先本地迭代，稳定后再作为 plugin 分享给团队。</div>
+      <div class="page-number">10 / 14</div>
+    </section>
+
+    <section class="slide" aria-label="Automations">
+      <div class="content">
+        <p class="eyebrow">10 / Automations</p>
+        <h2>稳定流程再自动化</h2>
+        <p class="subtitle">Automations 适合已经手动跑稳的流程。方法先稳定，时间表再自动。</p>
+        <div class="separator"></div>
+        <div class="split">
+          <div class="metric">
+            <div class="value">Skill</div>
+            <p>定义做事方法：步骤、输入、输出、质量标准。</p>
+          </div>
+          <div class="table">
+            <div class="row">
+              <strong>Commit 摘要</strong>
+              <span>定期汇总近期代码变化，辅助周报和站会。</span>
+            </div>
+            <div class="row">
+              <strong>Bug 扫描</strong>
+              <span>周期性检查潜在风险、CI 失败和回归模式。</span>
+            </div>
+            <div class="row">
+              <strong>Release notes</strong>
+              <span>根据稳定规则起草发布说明和变更摘要。</span>
+            </div>
+          </div>
+        </div>
+        <div class="tag-line">
+          <span class="tag">Skills 定义方法</span>
+          <span class="tag">Automations 定义节奏</span>
+          <span class="tag">先可靠，再定时</span>
+        </div>
+      </div>
+      <div class="footnote">还需要大量人工指导的流程，应先 Skill 化并迭代。</div>
+      <div class="page-number">11 / 14</div>
+    </section>
+
+    <section class="slide" aria-label="会话管理">
+      <div class="content">
+        <p class="eyebrow">11 / Session controls</p>
+        <h2>一个任务一条线程，保持上下文干净</h2>
+        <p class="subtitle">Session 是累积上下文、决策和操作的工作线程。线程管理会直接影响输出质量。</p>
+        <div class="separator"></div>
+        <div class="three-col">
+          <div class="card">
+            <span class="num-badge teal">1</span>
+            <h3>同一问题留在同一线程</h3>
+            <p>保留推理轨迹和已做决策，减少重复解释。</p>
+          </div>
+          <div class="card">
+            <span class="num-badge amber">2</span>
+            <h3>真正分叉才 fork</h3>
+            <p>方向变化明显时，用 `/fork` 保留原始上下文。</p>
+          </div>
+          <div class="card">
+            <span class="num-badge blue">3</span>
+            <h3>长线程及时 compact</h3>
+            <p>上下文膨胀时压缩历史，避免旧噪音拖累新任务。</p>
+          </div>
+        </div>
+        <div class="tag-line" style="margin-top: 26px;">
+          <span class="tag">/resume</span>
+          <span class="tag">/fork</span>
+          <span class="tag">/compact</span>
+          <span class="tag">/agent</span>
+          <span class="tag">/status</span>
+          <span class="tag">subagents</span>
+        </div>
+      </div>
+      <div class="footnote">关键原则：不要一个项目一条超长线程，而是一个任务一条线程。</div>
+      <div class="page-number">12 / 14</div>
+    </section>
+
+    <section class="slide" aria-label="常见错误">
+      <div class="content">
+        <p class="eyebrow">12 / Anti-patterns</p>
+        <h2>常见错误：把工程系统问题当成提示词问题</h2>
+        <p class="subtitle">文章最后的反模式，基本都指向同一件事：没有把有效做法沉淀下来。</p>
+        <div class="separator"></div>
+        <div class="mistake-grid">
+          <div class="mistake"><span class="bar"></span><p>把长期规则塞进每次 Prompt，而不是写入 `AGENTS.md` 或 Skill。</p></div>
+          <div class="mistake"><span class="bar"></span><p>不给 Codex 构建、测试、lint、review 的执行方式。</p></div>
+          <div class="mistake"><span class="bar"></span><p>复杂任务跳过计划，直接让 agent 开始改代码。</p></div>
+          <div class="mistake"><span class="bar"></span><p>还没理解工作流，就给整台电脑完整权限。</p></div>
+          <div class="mistake"><span class="bar"></span><p>多个实时线程同时改同一批文件，却不使用 worktree。</p></div>
+          <div class="mistake"><span class="bar"></span><p>手动流程还不可靠，就过早变成 Automation。</p></div>
+          <div class="mistake"><span class="bar"></span><p>把 Codex 当作需要逐步盯着看的工具，而不是并行队友。</p></div>
+          <div class="mistake"><span class="bar"></span><p>一个项目只用一条长线程，导致上下文越来越膨胀。</p></div>
+        </div>
+      </div>
+      <div class="footnote">反模式的共同解法：规则沉淀、权限收敛、验证明确、线程切分。</div>
+      <div class="page-number">13 / 14</div>
+    </section>
+
+    <section class="slide" aria-label="落地路线图">
+      <div class="content">
+        <p class="eyebrow">13 / Roadmap</p>
+        <h2>落地路线图：从个人习惯到团队系统</h2>
+        <p class="subtitle">不要一口气追求大而全。先让单次协作稳定，再逐层沉淀。</p>
+        <div class="separator"></div>
+        <div class="roadmap">
+          <div class="step">
+            <h3>1. 写清任务</h3>
+            <p>每次任务都有 Goal、Context、Constraints、Done when。</p>
+          </div>
+          <div class="step">
+            <h3>2. 固化规则</h3>
+            <p>把常用约定写进 `AGENTS.md` 和 `config.toml`。</p>
+          </div>
+          <div class="step">
+            <h3>3. 建立闭环</h3>
+            <p>让 Codex 执行测试、检查、review，并输出验证结果。</p>
+          </div>
+          <div class="step">
+            <h3>4. 规模化</h3>
+            <p>用 MCP、Skills、Automations 把稳定流程复用到团队。</p>
+          </div>
+        </div>
+        <div class="big-quote" style="margin-top: 24px; padding: 22px 28px;">
+          <p style="font-size: 24px;">成熟度问题：你是否还在每次解释工作方式，还是已经把工作方式写进系统？</p>
+        </div>
+      </div>
+      <div class="footnote">Source: OpenAI Developers - Codex Best practices</div>
+      <div class="page-number">14 / 14</div>
+    </section>
+  </main>
+</body>
+</html>

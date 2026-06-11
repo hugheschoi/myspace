@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Codegen SDD/TDD Workflow</title>
+  <style>
+    :root {
+      --ink: #1f2a37;
+      --muted: #5d6b7a;
+      --line: #d9e2ec;
+      --paper: #f7fafc;
+      --panel: #ffffff;
+      --blue: #2563eb;
+      --cyan: #0891b2;
+      --green: #059669;
+      --amber: #d97706;
+      --red: #dc2626;
+      --navy: #16243d;
+      --soft-blue: #e8f1ff;
+      --soft-green: #e8f8f1;
+      --soft-amber: #fff4df;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #dfe7ef;
+      color: var(--ink);
+      font-family: "Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    .deck {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      padding: 28px;
+      align-items: center;
+    }
+
+    .slide {
+      position: relative;
+      width: 1280px;
+      height: 720px;
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(5, 150, 105, 0.05)),
+        var(--paper);
+      border-radius: 0;
+      box-shadow: 0 18px 48px rgba(22, 36, 61, 0.18);
+      padding: 54px 72px 48px;
+    }
+
+    .slide::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(22, 36, 61, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(22, 36, 61, 0.045) 1px, transparent 1px);
+      background-size: 36px 36px;
+      mask-image: linear-gradient(135deg, transparent 0%, black 18%, black 82%, transparent 100%);
+      pointer-events: none;
+    }
+
+    .slide > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .kicker {
+      color: var(--cyan);
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      width: 780px;
+      color: var(--navy);
+      font-size: 62px;
+      line-height: 1.05;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      color: var(--navy);
+      font-size: 38px;
+      line-height: 1.15;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin-top: 14px;
+      width: 760px;
+      color: var(--muted);
+      font-size: 22px;
+      line-height: 1.45;
+    }
+
+    .header {
+      padding-bottom: 18px;
+      border-bottom: 3px solid var(--line);
+      margin-bottom: 28px;
+    }
+
+    .header .subtitle {
+      width: 980px;
+      font-size: 18px;
+      margin-top: 8px;
+    }
+
+    .page-number {
+      position: absolute;
+      right: 48px;
+      bottom: 32px;
+      color: #6b7788;
+      font-size: 15px;
+      font-weight: 700;
+      z-index: 2;
+    }
+
+    .cover-mark {
+      position: absolute;
+      right: 72px;
+      top: 74px;
+      width: 270px;
+      height: 270px;
+      border: 22px solid rgba(37, 99, 235, 0.14);
+      border-radius: 50%;
+    }
+
+    .cover-mark::before,
+    .cover-mark::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+    }
+
+    .cover-mark::before {
+      width: 150px;
+      height: 150px;
+      left: 38px;
+      top: 38px;
+      border: 18px solid rgba(5, 150, 105, 0.22);
+    }
+
+    .cover-mark::after {
+      width: 54px;
+      height: 54px;
+      left: 86px;
+      top: 86px;
+      background: var(--amber);
+      box-shadow: 74px 54px 0 rgba(37, 99, 235, 0.85);
+    }
+
+    .cover-footer {
+      position: absolute;
+      left: 72px;
+      bottom: 58px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      width: 760px;
+    }
+
+    .mini-card,
+    .card {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 10px 24px rgba(22, 36, 61, 0.08);
+    }
+
+    .mini-card {
+      padding: 14px 16px;
+      min-height: 82px;
+    }
+
+    .mini-card strong {
+      display: block;
+      color: var(--navy);
+      font-size: 18px;
+      margin-bottom: 6px;
+    }
+
+    .mini-card span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .card {
+      padding: 22px;
+      min-height: 150px;
+    }
+
+    .card h3 {
+      color: var(--navy);
+      font-size: 22px;
+      line-height: 1.2;
+      margin-bottom: 10px;
+    }
+
+    .card p,
+    .card li {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.45;
+    }
+
+    .card ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      height: 26px;
+      padding: 0 10px;
+      border-radius: 999px;
+      color: #fff;
+      background: var(--blue);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .tag.green {
+      background: var(--green);
+    }
+
+    .tag.amber {
+      background: var(--amber);
+    }
+
+    .tag.cyan {
+      background: var(--cyan);
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+      align-items: stretch;
+      margin-top: 8px;
+    }
+
+    .flow-step {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px 12px;
+      text-align: center;
+      min-height: 155px;
+      box-shadow: 0 8px 20px rgba(22, 36, 61, 0.07);
+    }
+
+    .flow-step .num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--soft-blue);
+      color: var(--blue);
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .flow-step strong {
+      display: block;
+      color: var(--navy);
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .flow-step span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .artifact {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 14px;
+      padding: 18px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      margin-bottom: 14px;
+    }
+
+    .artifact strong {
+      color: #fff;
+      background: var(--navy);
+      border-radius: 8px;
+      padding: 13px 10px;
+      text-align: center;
+      font-size: 18px;
+      align-self: start;
+    }
+
+    .artifact p {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.42;
+      padding-top: 2px;
+    }
+
+    .code-box {
+      background: #102033;
+      color: #dbeafe;
+      border-radius: 8px;
+      padding: 18px 20px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 17px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 8px 20px rgba(22, 36, 61, 0.06);
+    }
+
+    .table th,
+    .table td {
+      border-bottom: 1px solid var(--line);
+      padding: 13px 15px;
+      text-align: left;
+      vertical-align: top;
+      font-size: 15px;
+      line-height: 1.35;
+    }
+
+    .table th {
+      color: var(--navy);
+      background: #edf4fb;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .table td {
+      color: var(--muted);
+    }
+
+    .table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .rail {
+      display: grid;
+      grid-template-columns: 0.8fr 1.2fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .big-number {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 390px;
+      padding: 42px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--navy), #254a79);
+      color: #fff;
+    }
+
+    .big-number strong {
+      font-size: 88px;
+      line-height: 1;
+    }
+
+    .big-number span {
+      margin-top: 14px;
+      font-size: 21px;
+      line-height: 1.35;
+      color: #dbeafe;
+    }
+
+    .check-list {
+      display: grid;
+      gap: 13px;
+    }
+
+    .check {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 16px 18px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .check b {
+      display: flex;
+      width: 34px;
+      height: 34px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: var(--soft-green);
+      color: var(--green);
+      font-size: 18px;
+    }
+
+    .check span {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.42;
+    }
+
+    .path {
+      color: #bfdbfe;
+    }
+
+    .closing {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 34px;
+      align-items: center;
+      height: 520px;
+    }
+
+    .closing h2 {
+      font-size: 52px;
+      line-height: 1.08;
+    }
+
+    .closing p {
+      color: var(--muted);
+      margin-top: 18px;
+      font-size: 22px;
+      line-height: 1.45;
+    }
+
+    .stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .stack .card {
+      min-height: unset;
+      padding: 18px 20px;
+    }
+  </style>
+</head>
+<body>
+  <main class="deck">
+    <section class="slide" aria-label="Cover">
+      <div class="kicker">AI Codegen Engineering</div>
+      <h1>SDD / TDD 驱动的生码工程</h1>
+      <p class="subtitle">把 PRD、TD、接口文档和仓库上下文变成可追踪、可验证、可 review 的代码变更流程。</p>
+      <div class="cover-mark" aria-hidden="true"></div>
+      <div class="cover-footer">
+        <div class="mini-card"><strong>SDD</strong><span>定义要做什么，以及为什么这样做。</span></div>
+        <div class="mini-card"><strong>TDD</strong><span>定义怎么验收，以及哪里会回归。</span></div>
+        <div class="mini-card"><strong>Plan</strong><span>定义改哪些文件、按什么顺序改。</span></div>
+        <div class="mini-card"><strong>Verify</strong><span>用命令和 review 关闭风险。</span></div>
+      </div>
+    </section>
+
+    <section class="slide" aria-label="Why">
+      <div class="header">
+        <div class="kicker">Problem</div>
+        <h2>AI 生码最大的问题，不是写不出代码</h2>
+        <p class="subtitle">真正难的是控制上下文、意图、边界和验证，让每一行代码都能被解释和回归。</p>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <span class="tag">Context</span>
+          <h3>需求散在多处</h3>
+          <p>PRD、TD、YAPI、Confluence、Jira、路由文件、旧代码都可能各说一部分。没有索引，AI 很容易补脑。</p>
+        </div>
+        <div class="card">
+          <span class="tag amber">Scope</span>
+          <h3>改动边界模糊</h3>
+          <p>一个字段可能经过 schema、BLL、API、详情展示和提交格式化。缺少计划时，容易只改到表面。</p>
+        </div>
+        <div class="card">
+          <span class="tag green">Verify</span>
+          <h3>验证被后置</h3>
+          <p>如果测试和验收点等代码写完才补，常常只验证 happy path，遗漏权限、区域、旧数据和回归。</p>
+        </div>
+      </div>
+      <div class="page-number">02</div>
+    </section>
+
+    <section class="slide" aria-label="Mental Model">
+      <div class="header">
+        <div class="kicker">Mental Model</div>
+        <h2>把生码工程拆成四份合同</h2>
+        <p class="subtitle">每个产物都服务于一个问题：为什么改、怎么验、怎么改、改完是否可信。</p>
+      </div>
+      <div class="grid-4">
+        <div class="card">
+          <span class="tag">01</span>
+          <h3>Source Index</h3>
+          <p>把 PRD、TD、代码上下文编号，后续每个结论都能追溯来源。</p>
+        </div>
+        <div class="card">
+          <span class="tag cyan">02</span>
+          <h3>SDD</h3>
+          <p>把功能、页面、状态、接口和风险写成实现合同。</p>
+        </div>
+        <div class="card">
+          <span class="tag green">03</span>
+          <h3>TDD</h3>
+          <p>把功能点转成测试矩阵和手工验收步骤。</p>
+        </div>
+        <div class="card">
+          <span class="tag amber">04</span>
+          <h3>Plan + Verify</h3>
+          <p>小步 patch、定向校验、review 清单，避免一次性大改。</p>
+        </div>
+      </div>
+      <div class="page-number">03</div>
+    </section>
+
+    <section class="slide" aria-label="Workflow">
+      <div class="header">
+        <div class="kicker">Workflow</div>
+        <h2>一次生码任务的七步流水线</h2>
+        <p class="subtitle">这个流程故意慢半拍：先把意图和验收钉住，再让 AI 写代码。</p>
+      </div>
+      <div class="flow">
+        <div class="flow-step"><div class="num">1</div><strong>Source</strong><span>收集 PRD / TD / API / 代码线索</span></div>
+        <div class="flow-step"><div class="num">2</div><strong>Context</strong><span>定位路由、页面、BLL、schema、接口</span></div>
+        <div class="flow-step"><div class="num">3</div><strong>SDD</strong><span>定义功能点、状态和协议</span></div>
+        <div class="flow-step"><div class="num">4</div><strong>TDD</strong><span>设计测试矩阵和验收路径</span></div>
+        <div class="flow-step"><div class="num">5</div><strong>Plan</strong><span>列文件、顺序、风险和命令</span></div>
+        <div class="flow-step"><div class="num">6</div><strong>Patch</strong><span>按计划小步改代码</span></div>
+        <div class="flow-step"><div class="num">7</div><strong>Review</strong><span>校验 diff、命令结果和遗留风险</span></div>
+      </div>
+      <div class="page-number">04</div>
+    </section>
+
+    <section class="slide" aria-label="Engineering Structure">
+      <div class="header">
+        <div class="kicker">Engineering Structure</div>
+        <h2>本地 skill 的工程结构</h2>
+        <p class="subtitle">skill 像一个轻量 Harness：流程在 `SKILL.md`，模板在 `references`，脚手架在 `scripts`。</p>
+      </div>
+      <div class="two-col">
+        <div class="code-box">~/.codex/skills/ai-codegen-sdd-tdd/
+  SKILL.md
+  references/
+    codegen-run-template.md
+    review-checklist.md
+  scripts/
+    create_codegen_run.py</div>
+        <div class="stack">
+          <div class="artifact"><strong>SKILL</strong><p>定义何时触发、如何收集上下文、怎样按 SDD/TDD 生码。</p></div>
+          <div class="artifact"><strong>Template</strong><p>约束每次任务都产出 source index、SDD、TDD、plan 和 verification。</p></div>
+          <div class="artifact"><strong>Script</strong><p>快速在目标 repo 下创建一次生码任务目录，便于沉淀和复盘。</p></div>
+        </div>
+      </div>
+      <div class="page-number">05</div>
+    </section>
+
+    <section class="slide" aria-label="How To Run">
+      <div class="header">
+        <div class="kicker">How To Run</div>
+        <h2>一次需求怎么启动</h2>
+        <p class="subtitle">你可以手动跑脚本，也可以直接把 PRD/TD 给 Codex，让它按 skill 创建并填写产物。</p>
+      </div>
+      <div class="rail">
+        <div class="big-number">
+          <strong>1</strong>
+          <span>先创建一块独立工作台，避免 SDD、TDD、代码计划混进业务目录。</span>
+        </div>
+        <div>
+          <div class="code-box">python3 ~/.codex/skills/ai-codegen-sdd-tdd/scripts/create_codegen_run.py \
+  --name supplier-origin-code \
+  --root /Users/zhuangbing.cai/Documents/works/sbs-supplier-fe</div>
+          <div style="height: 18px;"></div>
+          <table class="table">
+            <thead><tr><th>生成文件</th><th>用途</th></tr></thead>
+            <tbody>
+              <tr><td><code>sdd.md</code></td><td>写清楚功能设计和接口协议。</td></tr>
+              <tr><td><code>tdd.md</code></td><td>写清楚测试矩阵和手工验收。</td></tr>
+              <tr><td><code>implementation-plan.md</code></td><td>写清楚文件、顺序和风险。</td></tr>
+              <tr><td><code>verification-report.md</code></td><td>记录命令结果、review 和残余风险。</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="page-number">06</div>
+    </section>
+
+    <section class="slide" aria-label="Template Usage">
+      <div class="header">
+        <div class="kicker">Template Usage</div>
+        <h2>模板不是让你手填，是让 AI 有栏杆</h2>
+        <p class="subtitle">你提供链接和目标，Codex 负责读资料、填文档、改代码、跑校验。</p>
+      </div>
+      <table class="table">
+        <thead>
+          <tr><th>阶段</th><th>你给什么</th><th>Codex 做什么</th><th>产物</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>输入</td><td>PRD / TD / YAPI / Confluence / 目标路由</td><td>建立来源索引，标记缺失信息</td><td>Source Index</td></tr>
+          <tr><td>设计</td><td>业务目标和约束</td><td>拆功能点、页面、状态、接口协议</td><td>SDD</td></tr>
+          <tr><td>测试</td><td>验收口径或关键 case</td><td>生成测试矩阵和网络 payload 检查</td><td>TDD</td></tr>
+          <tr><td>执行</td><td>确认或默认按计划走</td><td>小步 patch、复用现有模式</td><td>Code Diff</td></tr>
+          <tr><td>收口</td><td>目标校验范围</td><td>跑 lint/test、review diff、写风险</td><td>Verification Report</td></tr>
+        </tbody>
+      </table>
+      <div class="page-number">07</div>
+    </section>
+
+    <section class="slide" aria-label="Example">
+      <div class="header">
+        <div class="kicker">Example Prompt</div>
+        <h2>以后可以这样直接发起</h2>
+        <p class="subtitle">把“帮我生码”改成“按 SDD/TDD 生码”，AI 的输出会明显更可控。</p>
+      </div>
+      <div class="two-col">
+        <div class="code-box">用 ai-codegen-sdd-tdd 帮我做这个需求：
+PRD: https://confluence...pageId=xxx
+TD: https://confluence...pageId=yyy
+目标仓库: sbs-supplier-fe
+页面: /frs/supplier/request/create
+要求:
+- 先生成 SDD/TDD/Plan
+- 再实现代码
+- 最后跑 targeted lint 并写 verification report</div>
+        <div class="check-list">
+          <div class="check"><b>✓</b><span>先定位路由和页面文件，不猜路径。</span></div>
+          <div class="check"><b>✓</b><span>接口字段来自 TD/YAPI，不把展示值污染原始数据。</span></div>
+          <div class="check"><b>✓</b><span>patch 顺序可回滚，校验命令和 warning 单独记录。</span></div>
+          <div class="check"><b>✓</b><span>最终回答直接告诉你改了什么、怎么验、还剩什么风险。</span></div>
+        </div>
+      </div>
+      <div class="page-number">08</div>
+    </section>
+
+    <section class="slide" aria-label="Review">
+      <div class="header">
+        <div class="kicker">Review Gate</div>
+        <h2>生码不是结束，review 才是闸门</h2>
+        <p class="subtitle"><code>review-checklist.md</code> 把常见翻车点固定下来，尤其适合多仓、多路由、多接口字段的 FRS 场景。</p>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <span class="tag">Traceability</span>
+          <h3>可追溯</h3>
+          <ul>
+            <li>每个行为映射到 SDD</li>
+            <li>每个接口字段映射到 TD</li>
+            <li>推断明确标记</li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="tag green">Behavior</span>
+          <h3>行为稳定</h3>
+          <ul>
+            <li>默认值和区域逻辑不偏</li>
+            <li>不污染原始接口数据</li>
+            <li>保留权限和旧流程</li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="tag amber">Verification</span>
+          <h3>验证闭环</h3>
+          <ul>
+            <li>跑 targeted lint / test</li>
+            <li>记录已有 warning</li>
+            <li>留下手工验收路径</li>
+          </ul>
+        </div>
+      </div>
+      <div class="page-number">09</div>
+    </section>
+
+    <section class="slide" aria-label="Closing">
+      <div class="closing">
+        <div>
+          <div class="kicker">Takeaway</div>
+          <h2>让 AI 写代码之前，先让它写清楚“为什么”和“怎么验”</h2>
+          <p>这套工程的价值不是多一层文档，而是让每次生码都能被追踪、被复盘、被局部验证，也能放心交给团队 review。</p>
+        </div>
+        <div class="stack">
+          <div class="artifact"><strong>Start</strong><p>给 PRD / TD / 目标页面，启动一次 codegen run。</p></div>
+          <div class="artifact"><strong>Control</strong><p>用 SDD/TDD/Plan 控制 AI 的自由度。</p></div>
+          <div class="artifact"><strong>Ship</strong><p>用验证报告和 review 清单关闭风险。</p></div>
+        </div>
+      </div>
+      <div class="page-number">10</div>
+    </section>
+  </main>
+</body>
+</html>
