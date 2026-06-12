@@ -1,0 +1,1269 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IBS CLI 项目结构与关键代码深度梳理</title>
+  <style>
+    :root {
+      --ink: #17202a;
+      --muted: #5d6b78;
+      --line: #dfe7ef;
+      --paper: #f7fafc;
+      --blue: #2563eb;
+      --teal: #0f766e;
+      --green: #15803d;
+      --amber: #b45309;
+      --red: #b91c1c;
+      --violet: #6d28d9;
+      --panel: #ffffff;
+      --soft-blue: #eff6ff;
+      --soft-teal: #ecfdf5;
+      --soft-amber: #fffbeb;
+      --soft-red: #fef2f2;
+      --code: #0f172a;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: #d9e2ec;
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      letter-spacing: 0;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+      padding: 28px;
+    }
+
+    .slide {
+      position: relative;
+      width: 1280px;
+      height: 720px;
+      overflow: hidden;
+      background: var(--paper);
+      border: 1px solid rgba(23, 32, 42, 0.08);
+      box-shadow: 0 18px 42px rgba(15, 23, 42, 0.14);
+    }
+
+    .slide::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 9px;
+      height: 100%;
+      background: linear-gradient(180deg, var(--blue), var(--teal));
+    }
+
+    .inner {
+      position: absolute;
+      inset: 42px 56px 40px 66px;
+    }
+
+    .cover .inner {
+      inset: 60px 72px 54px 78px;
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 42px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      color: var(--teal);
+      font-size: 15px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      margin-bottom: 12px;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+
+    h1 {
+      font-size: 56px;
+      line-height: 1.08;
+      max-width: 660px;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      font-size: 34px;
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.55;
+      max-width: 980px;
+    }
+
+    .rule {
+      height: 3px;
+      width: 100%;
+      margin: 20px 0 22px;
+      background: linear-gradient(90deg, var(--blue), var(--teal), rgba(37, 99, 235, 0));
+    }
+
+    .content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .page-number {
+      position: absolute;
+      right: 42px;
+      bottom: 24px;
+      color: #64748b;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 6px 11px;
+      border-radius: 7px;
+      background: #eaf2ff;
+      color: #1e40af;
+      font-size: 13px;
+      font-weight: 800;
+      border: 1px solid #c7d7fe;
+    }
+
+    .hero-panel {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 24px;
+    }
+
+    .hero-title {
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--blue);
+      margin-bottom: 14px;
+    }
+
+    .hero-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .hero-chip {
+      padding: 13px 14px;
+      border-radius: 8px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      font-size: 15px;
+      line-height: 1.35;
+    }
+
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; align-items: start; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: start; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; align-items: start; }
+    .wide-narrow { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 20px; align-items: start; }
+    .narrow-wide { display: grid; grid-template-columns: 0.84fr 1.16fr; gap: 20px; align-items: start; }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px 17px;
+    }
+
+    .card.compact { padding: 12px 14px; }
+
+    .card h3 {
+      font-size: 17px;
+      line-height: 1.25;
+      margin-bottom: 9px;
+      color: var(--ink);
+    }
+
+    .card p, .card li {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    li + li { margin-top: 6px; }
+
+    .tight li + li { margin-top: 4px; }
+
+    .kpi {
+      font-size: 32px;
+      line-height: 1;
+      font-weight: 900;
+      color: var(--blue);
+      margin-bottom: 8px;
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+      font-weight: 700;
+    }
+
+    .pill-title {
+      display: inline-block;
+      padding: 5px 9px;
+      border-radius: 6px;
+      background: var(--soft-blue);
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 900;
+      margin-bottom: 9px;
+    }
+
+    .tree {
+      background: var(--code);
+      color: #dbeafe;
+      border-radius: 8px;
+      padding: 16px 18px;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 14px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+
+    pre {
+      margin: 0;
+      background: var(--code);
+      color: #dbeafe;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 13px;
+      line-height: 1.42;
+      overflow: hidden;
+      white-space: pre-wrap;
+    }
+
+    .code-small { font-size: 11.6px; line-height: 1.36; }
+    .code-tiny { font-size: 10.6px; line-height: 1.32; }
+
+    .callout {
+      border-left: 5px solid var(--blue);
+      background: var(--soft-blue);
+      padding: 13px 15px;
+      border-radius: 8px;
+      color: #1e3a8a;
+      font-size: 15px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .callout.teal { border-left-color: var(--teal); background: #ecfdf5; color: #115e59; }
+    .callout.amber { border-left-color: var(--amber); background: var(--soft-amber); color: #92400e; }
+    .callout.red { border-left-color: var(--red); background: var(--soft-red); color: #991b1b; }
+
+    .flow {
+      display: grid;
+      gap: 9px;
+    }
+
+    .flow-row {
+      display: grid;
+      grid-template-columns: 165px 1fr;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .flow-key {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: #e0f2fe;
+      color: #075985;
+      font-weight: 900;
+      font-size: 14px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .flow-value {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 8px;
+      padding: 10px 13px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .sequence {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      align-items: start;
+      margin-top: 4px;
+    }
+
+    .step {
+      position: relative;
+      min-height: 118px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+      padding: 13px 12px;
+    }
+
+    .step .num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--blue);
+      color: #fff;
+      font-weight: 900;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .step h3 {
+      font-size: 15px;
+      margin-bottom: 7px;
+    }
+
+    .step p {
+      color: var(--muted);
+      font-size: 12.6px;
+      line-height: 1.35;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      font-size: 13px;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+      line-height: 1.35;
+    }
+
+    th {
+      background: #edf6ff;
+      color: #1e40af;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    .tag {
+      display: inline-block;
+      border-radius: 6px;
+      padding: 3px 7px;
+      font-size: 11px;
+      font-weight: 900;
+      background: #eef2ff;
+      color: #3730a3;
+      margin-right: 4px;
+    }
+
+    .tag.green { background: var(--soft-teal); color: var(--green); }
+    .tag.amber { background: var(--soft-amber); color: var(--amber); }
+    .tag.red { background: var(--soft-red); color: var(--red); }
+
+    .divider .inner {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .divider h2 {
+      font-size: 52px;
+      max-width: 850px;
+    }
+
+    .divider .subtitle {
+      max-width: 720px;
+      font-size: 20px;
+    }
+
+    .mini-map {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+
+    .mini-node {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      min-height: 78px;
+    }
+
+    .mini-node strong {
+      display: block;
+      color: var(--ink);
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .mini-node span {
+      color: var(--muted);
+      font-size: 12.4px;
+      line-height: 1.35;
+    }
+
+    .source {
+      color: #64748b;
+      font-size: 11.5px;
+      line-height: 1.4;
+      margin-top: 9px;
+    }
+
+    @media print {
+      body { padding: 0; gap: 0; background: #fff; }
+      .slide { box-shadow: none; page-break-after: always; }
+    }
+  </style>
+</head>
+<body>
+  <section class="slide cover" aria-label="Cover">
+    <div class="inner">
+      <div>
+        <div class="eyebrow">IBS CLI Deep Dive</div>
+        <h1>项目结构与关键代码深度梳理</h1>
+        <p class="subtitle">围绕 @shopee/ibs-cli 的 CLI 入口、CR Shift-Left 主链路、Git diff 采集、Cursor 深链、Git hooks 管理与工程风险进行完整拆解。</p>
+        <div class="badge-row">
+          <span class="badge">Node.js CommonJS</span>
+          <span class="badge">Commander CLI</span>
+          <span class="badge">Git Hooks</span>
+          <span class="badge">Cursor Deep Link</span>
+          <span class="badge">CR Session API</span>
+        </div>
+      </div>
+      <div class="hero-panel">
+        <div class="hero-title">一句话定位</div>
+        <div class="hero-stack">
+          <div class="hero-chip">本地 CLI 负责采集 Git 仓库上下文与 diff。</div>
+          <div class="hero-chip">服务端负责创建代码审查 session、分批和去重。</div>
+          <div class="hero-chip">Cursor 负责执行最终的 AI code review 工具调用。</div>
+          <div class="hero-chip">Git hooks 负责把审查动作前置到 push 流程。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" aria-label="Project Summary">
+    <div class="inner">
+      <div class="eyebrow">01 / 全局结论</div>
+      <h2>这不是一个“自己做 AI Review”的 CLI</h2>
+      <p class="subtitle">它更像本地上下文采集器、审查 session 启动器、Cursor prompt 触发器和 Git hook 分发器的组合。</p>
+      <div class="rule"></div>
+      <div class="grid-4">
+        <div class="card">
+          <div class="kpi">ibs</div>
+          <div class="label">全局命令名，由 package.json 的 bin 字段暴露。</div>
+        </div>
+        <div class="card">
+          <div class="kpi">cr</div>
+          <div class="label">核心命令，采集 diff 后创建 CR session。</div>
+        </div>
+        <div class="card">
+          <div class="kpi">hooks</div>
+          <div class="label">可全局安装，也可本地注入 pre-push 包装脚本。</div>
+        </div>
+        <div class="card">
+          <div class="kpi">Cursor</div>
+          <div class="label">通过 deep link 打开 prompt，而不是在 CLI 内完成审查。</div>
+        </div>
+      </div>
+      <div style="height:18px"></div>
+      <div class="callout teal">核心设计取舍：把“Git 本地上下文”留在开发机，把“审查任务管理”放到后端，把“AI 执行入口”交给 Cursor。</div>
+    </div>
+    <div class="page-number">1</div>
+  </section>
+
+  <section class="slide" aria-label="Package Identity">
+    <div class="inner">
+      <div class="eyebrow">02 / 包信息</div>
+      <h2>包身份、运行环境与依赖</h2>
+      <p class="subtitle">项目是一个极轻依赖的 Node.js CLI，当前版本 1.2.4，运行时只依赖 commander 和 chalk。</p>
+      <div class="rule"></div>
+      <div class="wide-narrow">
+        <pre>{
+  "name": "@shopee/ibs-cli",
+  "version": "1.2.4",
+  "type": "commonjs",
+  "bin": { "ibs": "bin/index.js" },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^11.0.0"
+  },
+  "engines": { "node": "&gt;=16.0.0" }
+}</pre>
+        <div class="card">
+          <h3>工程含义</h3>
+          <ul>
+            <li>CommonJS 模块体系，所有 lib 通过 <code>require</code> 组装。</li>
+            <li>命令行框架使用 commander，命令注册集中在 <code>bin/index.js</code>。</li>
+            <li>HTTP 没有引入 axios/fetch 封装，而是通过 <code>curl</code> 子进程完成。</li>
+            <li>跨平台能力主要依赖系统命令：<code>open</code>、<code>osascript</code>、<code>xdg-open</code>、PowerShell。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="page-number">2</div>
+  </section>
+
+  <section class="slide" aria-label="Repository Structure">
+    <div class="inner">
+      <div class="eyebrow">03 / 项目结构</div>
+      <h2>目录并不大，但跨了多个系统边界</h2>
+      <p class="subtitle">源码集中在 bin、lib、scripts，docs 和 test 主要是辅助文档与协议测试页面。</p>
+      <div class="rule"></div>
+      <div class="narrow-wide">
+        <div class="tree">ibs-cli/
+├─ bin/
+│  └─ index.js
+├─ lib/
+│  ├─ code-review.js
+│  ├─ git-utils.js
+│  ├─ git-hooks-manager.js
+│  ├─ clipboard-manager.js
+│  ├─ cursor-interaction.js
+│  ├─ filter-config-cache.js
+│  ├─ ibs-protocal.js
+│  ├─ config-manager.js
+│  ├─ platform-utils.js
+│  ├─ system-utils.js
+│  └─ user-interaction.js
+├─ scripts/
+│  ├─ postinstall.js
+│  └─ preuninstall.js
+├─ docs/
+├─ test/
+└─ package.json</div>
+        <div class="grid-2">
+          <div class="card compact"><h3>bin</h3><p>CLI 装配层，注册命令、初始化模块、将用户输入转发给业务对象。</p></div>
+          <div class="card compact"><h3>lib</h3><p>核心逻辑层，包含 CR 工作流、Git 操作、hooks、Cursor 联动。</p></div>
+          <div class="card compact"><h3>scripts</h3><p>npm lifecycle 辅助脚本，意图是在本地安装和卸载时注入或恢复 hook。</p></div>
+          <div class="card compact"><h3>docs/test</h3><p>本地开发指南、删除文件过滤设计、ibs:// 协议测试页面。</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="page-number">3</div>
+  </section>
+
+  <section class="slide" aria-label="Module Map">
+    <div class="inner">
+      <div class="eyebrow">04 / 模块地图</div>
+      <h2>模块职责从入口向外分层</h2>
+      <p class="subtitle">最重要的阅读顺序是：入口命令、CR 编排、Git 数据采集、Cursor 发送、hooks 管理。</p>
+      <div class="rule"></div>
+      <div class="mini-map">
+        <div class="mini-node"><strong>bin/index.js</strong><span>Commander 入口；注册 cr、update、hooks；组合所有 Manager。</span></div>
+        <div class="mini-node"><strong>code-review.js</strong><span>CR 主流程；模式判断；构造 session setup payload；生成 Cursor prompt。</span></div>
+        <div class="mini-node"><strong>git-utils.js</strong><span>Git 命令封装；diff 解析；commit list；规则文件扫描。</span></div>
+        <div class="mini-node"><strong>filter-config-cache.js</strong><span>从后端获取文件过滤配置；失败后退回默认 include/exclude。</span></div>
+        <div class="mini-node"><strong>clipboard-manager.js</strong><span>当前 CR 使用 Cursor deep link；旧路径保留剪贴板与键盘模拟。</span></div>
+        <div class="mini-node"><strong>git-hooks-manager.js</strong><span>生成 hooks 脚本；全局 hooksPath；本地包装与备份恢复。</span></div>
+        <div class="mini-node"><strong>ibs-protocal.js</strong><span>macOS 注册 ibs:// URL Scheme，浏览器可触发 CLI。</span></div>
+        <div class="mini-node"><strong>scripts/*.js</strong><span>本地安装/卸载时自动注入/清理 pre-push 的意图实现。</span></div>
+        <div class="mini-node"><strong>platform/system/user</strong><span>延时、快捷键、权限检测、readline 交互等通用能力。</span></div>
+      </div>
+    </div>
+    <div class="page-number">4</div>
+  </section>
+
+  <section class="slide divider" aria-label="Part CLI">
+    <div class="inner">
+      <div class="eyebrow">PART A</div>
+      <h2>CLI 入口与命令设计</h2>
+      <p class="subtitle">先从用户输入如何变成具体模块调用开始看。这个项目的组织方式很直接，入口文件承担了依赖装配和命令分发。</p>
+    </div>
+    <div class="page-number">5</div>
+  </section>
+
+  <section class="slide" aria-label="CLI Bootstrap">
+    <div class="inner">
+      <div class="eyebrow">05 / CLI 装配</div>
+      <h2>CursorCLI 构造函数就是依赖注入中心</h2>
+      <p class="subtitle">所有工具类在构造函数里实例化，随后 setupCommands 将命令与方法绑定。</p>
+      <div class="rule"></div>
+      <div class="wide-narrow">
+        <pre class="code-small">class CursorCLI {
+  constructor() {
+    this.program = new Command();
+    this.platformUtils = new PlatformUtils();
+    this.systemUtils = new SystemUtils();
+    this.clipboardManager = new ClipboardManager(this.platformUtils);
+    this.cursorInteraction = new CursorInteraction(this.platformUtils);
+    this.gitUtils = new GitUtils();
+    this.userInteraction = new UserInteraction();
+    this.configManager = new ConfigManager();
+    this.codeReview = new CodeReview(
+      this.platformUtils,
+      this.gitUtils,
+      this.userInteraction
+    );
+    this.gitHooksManager = new GitHooksManager();
+    this.setupCommands();
+  }
+}</pre>
+        <div class="card">
+          <h3>设计特点</h3>
+          <ul>
+            <li>依赖显式传入，<code>CodeReview</code> 不自己 new GitUtils，便于替换。</li>
+            <li>大多数模块无状态，状态主要来自当前工作目录、环境变量和 Git 仓库。</li>
+            <li>入口文件里保留了不少已注释命令，说明项目从 Cursor 通用助手逐步收敛到 CR 场景。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="page-number">6</div>
+  </section>
+
+  <section class="slide" aria-label="Command Matrix">
+    <div class="inner">
+      <div class="eyebrow">06 / 命令矩阵</div>
+      <h2>当前公开命令只有三条主线</h2>
+      <p class="subtitle">README 中也围绕 cr、hooks、update 展开；其余能力多为历史实现或内部辅助方法。</p>
+      <div class="rule"></div>
+      <table>
+        <thead><tr><th>命令</th><th>入口方法</th><th>核心行为</th><th>典型用法</th></tr></thead>
+        <tbody>
+          <tr><td><code>ibs cr</code></td><td><code>runCodeReview</code></td><td>采集 Git diff，创建后端 session，发送 Cursor prompt。</td><td><code>ibs cr release feature/x</code><br><code>ibs cr --dry</code></td></tr>
+          <tr><td><code>ibs update</code></td><td><code>runUpdate</code></td><td>查询 Shopee npm registry，安装最新或指定版本。</td><td><code>ibs update --check</code><br><code>ibs upgrade 1.2.4</code></td></tr>
+          <tr><td><code>ibs hooks</code></td><td><code>runHooksCommand</code></td><td>全局安装、卸载、本地注入、移除和状态展示。</td><td><code>ibs hooks install pre-push</code><br><code>ibs hooks status</code></td></tr>
+        </tbody>
+      </table>
+      <div style="height:16px"></div>
+      <div class="callout amber">注意：代码里有 test case、mock、deploy 等 TODO 方法，但没有注册到 Commander，当前不可通过命令行直接访问。</div>
+    </div>
+    <div class="page-number">7</div>
+  </section>
+
+  <section class="slide divider" aria-label="Part CR">
+    <div class="inner">
+      <div class="eyebrow">PART B</div>
+      <h2>CR Shift-Left 主链路</h2>
+      <p class="subtitle">这是项目最核心的业务流程：本地决定审查范围，后端创建任务，Cursor 发起工具调用。</p>
+    </div>
+    <div class="page-number">8</div>
+  </section>
+
+  <section class="slide" aria-label="CR End To End Flow">
+    <div class="inner">
+      <div class="eyebrow">07 / 端到端流程</div>
+      <h2>从 ibs cr 到 Cursor 工具调用</h2>
+      <p class="subtitle">CLI 不直接产出审查结果，而是将 session_id 交给 Cursor 环境里的 <code>cr_shift_left_batch_review</code>。</p>
+      <div class="rule"></div>
+      <div class="sequence">
+        <div class="step"><div class="num">1</div><h3>用户触发</h3><p>手动执行 <code>ibs cr</code>，或 pre-push hook 自动执行。</p></div>
+        <div class="step"><div class="num">2</div><h3>识别模式</h3><p>rerun、MR URL、staged、branch/commit 四类路径。</p></div>
+        <div class="step"><div class="num">3</div><h3>采集上下文</h3><p>workspace、user、project_id、rules、diff、commits。</p></div>
+        <div class="step"><div class="num">4</div><h3>创建 session</h3><p>POST 到 <code>/api/quality/cr/session/setup</code>。</p></div>
+        <div class="step"><div class="num">5</div><h3>唤起 Cursor</h3><p>deep link 写入 prompt，要求调用 batch review 工具。</p></div>
+      </div>
+      <div style="height:20px"></div>
+      <pre>must call cr_shift_left_batch_review({
+  session_id: "..."
+})
+
+Always reply in Chinese.</pre>
+    </div>
+    <div class="page-number">9</div>
+  </section>
+
+  <section class="slide" aria-label="Review Modes">
+    <div class="inner">
+      <div class="eyebrow">08 / 审查模式</div>
+      <h2>四种入口路径决定 diff 来源</h2>
+      <p class="subtitle">模式选择发生在 <code>CodeReview.runCodeReview()</code> 早期，优先级会影响用户感知。</p>
+      <div class="rule"></div>
+      <div class="grid-2">
+        <div class="card">
+          <span class="pill-title">rerun</span>
+          <h3>已有 session 复跑</h3>
+          <ul>
+            <li>参数：<code>--rerun=session_id=xxx</code></li>
+            <li>不重新收集 diff，不访问 Git。</li>
+            <li>直接生成 Cursor prompt。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="pill-title">MR URL</span>
+          <h3>服务端从 GitLab 获取 diff</h3>
+          <ul>
+            <li>第一个参数匹配 <code>/-/merge_requests/\d+</code>。</li>
+            <li>本地只上传 MR URL、workspace、user、rules。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="pill-title">staged</span>
+          <h3>暂存区优先</h3>
+          <ul>
+            <li>只要 <code>git diff --cached</code> 有内容就启用。</li>
+            <li>适合提交前审查已 staged 代码。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="pill-title">branch</span>
+          <h3>分支或 commit 对比</h3>
+          <ul>
+            <li>无 staged changes 时启用。</li>
+            <li>可交互输入，也可传 <code>base head</code>。</li>
+            <li>会 fetch 远程基准分支。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="page-number">10</div>
+  </section>
+
+  <section class="slide" aria-label="CodeReview Payload">
+    <div class="inner">
+      <div class="eyebrow">09 / Session Payload</div>
+      <h2>上传给后端的字段是 GitLab MR 语义</h2>
+      <p class="subtitle">本地参数名有历史包袱，但最终 payload 用 <code>source_branch</code> 表示新代码分支，<code>target_branch</code> 表示基准分支。</p>
+      <div class="rule"></div>
+      <div class="wide-narrow">
+        <pre class="code-small">{
+  workspace,
+  user_name,
+  files,
+  commits,
+  project_id,
+  jira_id,
+  source_branch,
+  target_branch,
+  current_branch,
+  commit_id_base,
+  commit_id_head,
+  diff_type,
+  cursor_rules,
+  extra_params,
+  auto_fixed,
+  version
+}</pre>
+        <div class="flow">
+          <div class="flow-row"><div class="flow-key">workspace</div><div class="flow-value">当前执行目录，通常是 Git 仓库根目录或子目录。</div></div>
+          <div class="flow-row"><div class="flow-key">files</div><div class="flow-value">过滤后的变更文件，每项包含路径、变更行数和 diff 内容。</div></div>
+          <div class="flow-row"><div class="flow-key">cursor_rules</div><div class="flow-value">从 <code>.cursor/rules</code> 中扫描并压缩后的规则数据。</div></div>
+          <div class="flow-row"><div class="flow-key">auto_fixed</div><div class="flow-value"><code>--no-fix</code> 通过 commander 反转为 <code>options.fix === false</code>。</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="page-number">11</div>
+  </section>
+
+  <section class="slide" aria-label="HTTP Layer">
+    <div class="inner">
+      <div class="eyebrow">10 / HTTP 实现</div>
+      <h2>HTTP 层用 curl 子进程，而非 JS HTTP 客户端</h2>
+      <p class="subtitle">请求体先写入临时 JSON 文件，再通过 <code>--data-binary @file</code> 上传，最后一行用 <code>--write-out</code> 取 HTTP 状态码。</p>
+      <div class="rule"></div>
+      <div class="grid-2">
+        <pre class="code-small">const tmpFile = path.join(os.tmpdir(),
+  `cr-request-${Date.now()}.json`
+);
+fs.writeFileSync(tmpFile, JSON.stringify(data));
+
+const curlCmd = `curl -X POST "${url}" \
+  -H "Content-Type: application/json" \
+  --data-binary @"${tmpFile}" \
+  --max-time ${timeout} \
+  --silent \
+  --show-error \
+  --write-out "\n%{http_code}"`;</pre>
+        <div class="card">
+          <h3>为什么这样写</h3>
+          <ul>
+            <li>避免大 payload 在 shell 字符串中转义困难。</li>
+            <li>不用引入额外 HTTP 依赖。</li>
+            <li><code>maxBuffer</code> 设置到 50MB，用于容纳较大响应。</li>
+          </ul>
+          <div style="height:10px"></div>
+          <div class="callout red">风险：依赖系统 curl；URL 和命令字符串仍经过 shell，长期看应迁移到 Node 原生 fetch 或 undici。</div>
+        </div>
+      </div>
+    </div>
+    <div class="page-number">12</div>
+  </section>
+
+  <section class="slide divider" aria-label="Part Git">
+    <div class="inner">
+      <div class="eyebrow">PART C</div>
+      <h2>Git 数据采集与 diff 解析</h2>
+      <p class="subtitle">这是本地 CLI 最有价值的部分：尽量准确、轻量地把本地变更变成服务端可处理的数据结构。</p>
+    </div>
+    <div class="page-number">13</div>
+  </section>
+
+  <section class="slide" aria-label="Git Diff Parser">
+    <div class="inner">
+      <div class="eyebrow">11 / Diff 采集</div>
+      <h2>一次 git diff 同时拿统计和补丁</h2>
+      <p class="subtitle">命令使用 <code>--numstat --patch</code>，先解析文件行数，再解析每个文件的 patch 内容。</p>
+      <div class="rule"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>branch 模式</h3>
+          <pre class="code-small">git diff \
+  origin/base...head \
+  --diff-filter=d \
+  --numstat \
+  --patch</pre>
+          <ul>
+            <li>分支对比使用三点语法。</li>
+            <li>commit 对比时改用空格语法。</li>
+            <li>删除文件通过小写 d 排除。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>staged 模式</h3>
+          <pre class="code-small">git diff \
+  --cached \
+  --diff-filter=d \
+  --numstat \
+  --patch</pre>
+          <ul>
+            <li>只审查已暂存内容。</li>
+            <li>新增、修改、重命名会保留。</li>
+            <li>测试、mock、docs 等再由过滤规则排除。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="page-number">14</div>
+  </section>
+
+  <section class="slide" aria-label="Diff Parser Detail">
+    <div class="inner">
+      <div class="eyebrow">12 / Parser 细节</div>
+      <h2>解析分两段：numstat 建索引，patch 填内容</h2>
+      <p class="subtitle">文件是否进入最终列表，由扩展名 include 和路径 exclude 双重控制。</p>
+      <div class="rule"></div>
+      <div class="wide-narrow">
+        <pre class="code-tiny">const fileStats = new Map();
+
+// 1. numstat: added deleted file
+if (filterRegex.test(file) && !excludeRegex.test(file)) {
+  fileStats.set(file, {
+    diff_lines: addedNum + deletedNum
+  });
+}
+
+// 2. patch: diff --git a/x b/x
+if (currentFile && fileStats.has(currentFile)) {
+  fileDiffs.push({
+    file_path: currentFile,
+    diff_lines: fileStats.get(currentFile).diff_lines,
+    diff: this.compressContent(currentDiff.trim())
+  });
+}</pre>
+        <div class="card">
+          <h3>关键点</h3>
+          <ul>
+            <li><code>numstat</code> 提供行数，<code>patch</code> 提供上下文。</li>
+            <li>diff 内容用 gzip 后 base64，便于 JSON 传输。</li>
+            <li><code>maxBuffer</code> 放大到 200MB，以适配较大 diff。</li>
+            <li>最后一个文件当前没有压缩，是需要重点修的实现不一致。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="page-number">15</div>
+  </section>
+
+  <section class="slide" aria-label="Filter Rules">
+    <div class="inner">
+      <div class="eyebrow">13 / 文件过滤</div>
+      <h2>过滤配置优先远程，失败时默认兜底</h2>
+      <p class="subtitle"><code>FilterConfigCache</code> 不是传统缓存，每次都会尝试请求远程配置；失败再回退到硬编码规则。</p>
+      <div class="rule"></div>
+      <div class="grid-3">
+        <div class="card">
+          <h3>远程配置</h3>
+          <ul class="tight">
+            <li>GET <code>/api/quality/cr/config</code></li>
+            <li>读取 <code>data.fileFilter</code></li>
+            <li>支持字符串或数组格式</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>默认 include</h3>
+          <ul class="tight">
+            <li><code>ts</code> / <code>js</code></li>
+            <li><code>vue</code> / <code>tsx</code> / <code>jsx</code></li>
+            <li><code>go</code></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>默认 exclude</h3>
+          <ul class="tight">
+            <li>mock / __mocks__</li>
+            <li>config / d.ts</li>
+            <li>test / spec / unit</li>
+            <li>docs / demo / README</li>
+          </ul>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+      <div class="callout">过滤放在本地执行，能减少上传体积和后端解析压力；远程配置让规则可以集中调整。</div>
+    </div>
+    <div class="page-number">16</div>
+  </section>
+
+  <section class="slide" aria-label="Cursor Rules">
+    <div class="inner">
+      <div class="eyebrow">14 / Cursor Rules</div>
+      <h2>项目自定义审查规则会被扫描并压缩</h2>
+      <p class="subtitle">扫描路径是 <code>.cursor/rules/**/code-review/cr-*.mdc</code>，这让不同项目可以提供自己的审查标准。</p>
+      <div class="rule"></div>
+      <div class="grid-2">
+        <pre class="code-small">const rulesBaseDir = path.join(
+  projectRoot,
+  '.cursor/rules'
+);
+
+if (/code-review[\/\\]cr-.+\.mdc$/
+  .test(relativePath)) {
+  files.push({
+    path: path.relative(projectRoot, fullPath),
+    content,
+    size
+  });
+}</pre>
+        <div class="card">
+          <h3>返回结构</h3>
+          <ul>
+            <li><code>compressed_data</code>：完整规则 JSON gzip+base64。</li>
+            <li><code>original_size</code> / <code>compressed_size</code>：用于日志展示压缩率。</li>
+            <li><code>files</code>：只保留路径和大小，用于 CLI 输出。</li>
+          </ul>
+          <div style="height:10px"></div>
+          <div class="callout teal">这部分是项目差异化能力的入口：同一个 CLI 可以服务不同仓库的规则体系。</div>
+        </div>
+      </div>
+    </div>
+    <div class="page-number">17</div>
+  </section>
+
+  <section class="slide divider" aria-label="Part Cursor">
+    <div class="inner">
+      <div class="eyebrow">PART D</div>
+      <h2>Cursor 与协议联动</h2>
+      <p class="subtitle">从当前代码看，CR 主链路已经从“剪贴板 + 快捷键模拟”转向更稳定的 Cursor deep link。</p>
+    </div>
+    <div class="page-number">18</div>
+  </section>
+
+  <section class="slide" aria-label="Cursor Deep Link">
+    <div class="inner">
+      <div class="eyebrow">15 / Cursor 发送</div>
+      <h2>当前 CR 使用 cursor:// 深链发送 prompt</h2>
+      <p class="subtitle">这条路径不需要先聚焦 Cursor、清空输入框、粘贴、回车，减少了对辅助功能权限的依赖。</p>
+      <div class="rule"></div>
+      <div class="grid-2">
+        <pre class="code-small">async sendMessageToCursor(message) {
+  await this.clipboardManager.openCursorPrompt(message);
+}
+
+async openCursorPrompt(text) {
+  const encoded = encodeURIComponent(text);
+  const url =
+    `cursor://anysphere.cursor-deeplink/prompt?text=${encoded}`;
+  exec(platformCommand(url));
+}</pre>
+        <div class="card">
+          <h3>两代方案对比</h3>
+          <table>
+            <thead><tr><th>方案</th><th>特点</th></tr></thead>
+            <tbody>
+              <tr><td>旧路径</td><td>打开 Cursor、快捷键、剪贴板、粘贴、回车；对系统权限敏感。</td></tr>
+              <tr><td>新路径</td><td>通过 URL Scheme 直接把 prompt 交给 Cursor；更短、更稳。</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="page-number">19</div>
+  </section>
+
+  <section class="slide" aria-label="IBS Protocol">
+    <div class="inner">
+      <div class="eyebrow">16 / ibs:// 协议</div>
+      <h2>浏览器触发 CLI 的 macOS URL Scheme</h2>
+      <p class="subtitle"><code>ibs-protocal.js</code> 会编译 AppleScript App，并注册成 <code>ibs://</code> 的默认处理程序。</p>
+      <div class="rule"></div>
+      <div class="flow">
+        <div class="flow-row"><div class="flow-key">注册位置</div><div class="flow-value"><code>~/Library/Application Support/IBSProtocol.app</code>，指纹保存到 <code>~/.ibs-cli/protocol-fingerprint.json</code>。</div></div>
+        <div class="flow-row"><div class="flow-key">触发格式</div><div class="flow-value"><code>ibs://cr?workspace=/path&session_id=xxx</code>，其中 workspace 会被提取成工作目录。</div></div>
+        <div class="flow-row"><div class="flow-key">执行方式</div><div class="flow-value">AppleScript 写入 <code>/tmp/ibs-cr.command</code>，再用 Terminal 打开执行。</div></div>
+        <div class="flow-row"><div class="flow-key">rerun 转换</div><div class="flow-value">除 workspace 外的 query 参数会重新组合成 <code>ibs cr --rerun=...</code>。</div></div>
+        <div class="flow-row"><div class="flow-key">日志位置</div><div class="flow-value"><code>/tmp/ibs-proxy.log</code>，用于排查 URL Scheme 是否触发。</div></div>
+      </div>
+    </div>
+    <div class="page-number">20</div>
+  </section>
+
+  <section class="slide divider" aria-label="Part Hooks">
+    <div class="inner">
+      <div class="eyebrow">PART E</div>
+      <h2>Git Hooks 管理机制</h2>
+      <p class="subtitle">hooks 是这个 CLI 最容易影响用户环境的部分：既要自动触发 CR，又要尽量不破坏已有 hook 体系。</p>
+    </div>
+    <div class="page-number">21</div>
+  </section>
+
+  <section class="slide" aria-label="Global Hooks">
+    <div class="inner">
+      <div class="eyebrow">17 / 全局 Hooks</div>
+      <h2>全局模式通过 core.hooksPath 接管 Git hooks</h2>
+      <p class="subtitle">安装时创建 <code>~/.git-hooks</code>，写入 hook 文件，然后设置 Git 全局 hooksPath。</p>
+      <div class="rule"></div>
+      <div class="grid-3">
+        <div class="card">
+          <h3>支持类型</h3>
+          <ul>
+            <li><code>pre-push</code></li>
+            <li><code>pre-commit</code></li>
+            <li><code>post-commit</code></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>安装动作</h3>
+          <ul>
+            <li>校验 hook 类型。</li>
+            <li>备份非 IBS 旧 hook。</li>
+            <li>写入 755 权限脚本。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Git 配置</h3>
+          <ul>
+            <li><code>git config --global core.hooksPath</code></li>
+            <li>已有路径会被提示并覆盖。</li>
+            <li>卸载空目录时 unset。</li>
+          </ul>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+      <div class="callout red">全局 hooksPath 是强影响配置：它会改变所有仓库的 hook 查找路径，需谨慎告知用户。</div>
+    </div>
+    <div class="page-number">22</div>
+  </section>
+
+  <section class="slide" aria-label="Pre Push Flow">
+    <div class="inner">
+      <div class="eyebrow">18 / pre-push 脚本</div>
+      <h2>push 前计算 base/head，并运行 ibs cr</h2>
+      <p class="subtitle">这个 hook 是辅助型：AI CR 异常不会阻止 push，但本地原 hook 或 Husky hook 失败会阻止。</p>
+      <div class="rule"></div>
+      <div class="sequence">
+        <div class="step"><div class="num">1</div><h3>读取 stdin</h3><p>Git 传入 local ref/sha、remote ref/sha；stdin 只能读取一次，所以会缓存。</p></div>
+        <div class="step"><div class="num">2</div><h3>处理新分支</h3><p>remote sha 为零时，尝试用 origin 默认分支求 merge-base。</p></div>
+        <div class="step"><div class="num">3</div><h3>设置环境</h3><p>导出 <code>IBS_BASE_SHA</code> 和 <code>IBS_HEAD_SHA</code>。</p></div>
+        <div class="step"><div class="num">4</div><h3>运行 CR</h3><p>执行 <code>ibs cr BASE HEAD</code>；可用 <code>IBS_NO_CR=1</code> 跳过。</p></div>
+        <div class="step"><div class="num">5</div><h3>转发本地 hook</h3><p>调用 <code>.git/hooks</code> 或 <code>.husky</code> 中原有 hook。</p></div>
+      </div>
+      <div style="height:16px"></div>
+      <div class="callout amber">README/注释中出现 <code>git push --no-cr</code>，但 Git 原生命令不接受这个自定义参数；当前可靠方式是环境变量。</div>
+    </div>
+    <div class="page-number">23</div>
+  </section>
+
+  <section class="slide" aria-label="Local Hook Injection">
+    <div class="inner">
+      <div class="eyebrow">19 / 本地注入</div>
+      <h2>本地注入的重点是“包装而不是覆盖”</h2>
+      <p class="subtitle">它会根据仓库现有 hooks 配置选择不同策略，尽量保存原 hook 并在 IBS 之后继续执行。</p>
+      <div class="rule"></div>
+      <table>
+        <thead><tr><th>检测结果</th><th>判断方式</th><th>注入策略</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag green">husky</span></td><td>存在 <code>.husky</code> 或 hooksPath 指向 .husky</td><td>直接包装 <code>.husky/pre-push</code></td></tr>
+          <tr><td><span class="tag">local custom</span></td><td>仓库级 <code>core.hooksPath</code></td><td>在自定义路径中包装 pre-push</td></tr>
+          <tr><td><span class="tag amber">global</span></td><td>全局 <code>core.hooksPath</code></td><td>创建本地 .git/hooks 覆盖，并给其他全局 hook 建软链</td></tr>
+          <tr><td><span class="tag">default</span></td><td>没有 hooksPath</td><td>包装默认 <code>.git/hooks/pre-push</code></td></tr>
+        </tbody>
+      </table>
+      <div style="height:14px"></div>
+      <div class="callout teal">备份文件统一命名为 <code>pre-push.ibs-backup</code>，卸载时优先恢复备份。</div>
+    </div>
+    <div class="page-number">24</div>
+  </section>
+
+  <section class="slide" aria-label="Postinstall Caveat">
+    <div class="inner">
+      <div class="eyebrow">20 / lifecycle 脚本</div>
+      <h2>postinstall/preuninstall 写了，但当前 package.json 未注册</h2>
+      <p class="subtitle">scripts 目录表达了本地安装自动注入 hook、卸载恢复 hook 的意图，但当前包定义里没有 lifecycle scripts 字段。</p>
+      <div class="rule"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>postinstall.js 的意图</h3>
+          <ul>
+            <li>判断全局安装还是本地安装。</li>
+            <li>本地安装时定位项目根目录。</li>
+            <li>调用 <code>manager.injectLocalHook('pre-push')</code>。</li>
+            <li>调试日志写入 <code>/tmp/ibs-cli-postinstall.log</code>。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>当前快照的问题</h3>
+          <ul>
+            <li><code>package.json</code> 中没有 <code>scripts.postinstall</code>。</li>
+            <li><code>package.json</code> 中没有 <code>scripts.preuninstall</code>。</li>
+            <li>因此 npm 安装时不会自动执行这些文件。</li>
+            <li>除非发布流程另有注入，否则这部分只是未接线能力。</li>
+          </ul>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+      <div class="callout amber">如果希望本地安装自动生效，应显式在 package.json 增加 lifecycle scripts，并补充安全提示与测试。</div>
+    </div>
+    <div class="page-number">25</div>
+  </section>
+
+  <section class="slide divider" aria-label="Part Risks">
+    <div class="inner">
+      <div class="eyebrow">PART F</div>
+      <h2>风险点与改进路线</h2>
+      <p class="subtitle">这部分把代码阅读转化为工程判断：哪些点会出问题，哪些点最值得先修。</p>
+    </div>
+    <div class="page-number">26</div>
+  </section>
+
+  <section class="slide" aria-label="Key Risks">
+    <div class="inner">
+      <div class="eyebrow">21 / 关键风险</div>
+      <h2>最需要关注的 6 个问题</h2>
+      <p class="subtitle">这些点来自当前代码实现，而不是泛泛而谈的 CLI 风险。</p>
+      <div class="rule"></div>
+      <div class="grid-3">
+        <div class="card compact"><span class="tag red">Bug</span><h3>最后一个 diff 未压缩</h3><p>前面文件用 gzip+base64，最后一个文件直接存原文，可能导致后端解码不一致。</p></div>
+        <div class="card compact"><span class="tag red">Shell</span><h3>命令拼接注入风险</h3><p>分支名、路径、URL 多处进入 shell 字符串，遇到特殊字符可能失败或更严重。</p></div>
+        <div class="card compact"><span class="tag amber">Git</span><h3>全局 hooksPath 覆盖</h3><p>安装全局 hooks 会影响所有仓库，用户已有全局 hook 管理体系可能被替换。</p></div>
+        <div class="card compact"><span class="tag amber">Docs</span><h3>--no-cr 文档不准确</h3><p>Git 不接受 <code>git push --no-cr</code>，实际应使用 <code>IBS_NO_CR=1 git push</code>。</p></div>
+        <div class="card compact"><span class="tag amber">Lifecycle</span><h3>脚本未接线</h3><p>postinstall/preuninstall 存在但 package.json 未注册，安装时不会自动触发。</p></div>
+        <div class="card compact"><span class="tag">Test</span><h3>缺少自动化测试</h3><p>当前没有测试脚本；diff parser、hook wrapper、URL scheme 都缺验证。</p></div>
+      </div>
+    </div>
+    <div class="page-number">27</div>
+  </section>
+
+  <section class="slide" aria-label="Improvement Roadmap">
+    <div class="inner">
+      <div class="eyebrow">22 / 改进路线</div>
+      <h2>优先级建议：先正确，再安全，最后体验</h2>
+      <p class="subtitle">如果后续要继续维护，我建议按风险闭环来排期，而不是先堆新命令。</p>
+      <div class="rule"></div>
+      <table>
+        <thead><tr><th>优先级</th><th>建议</th><th>原因</th><th>涉及文件</th></tr></thead>
+        <tbody>
+          <tr><td>P0</td><td>修复最后一个 diff 未压缩</td><td>直接影响服务端数据一致性。</td><td><code>lib/git-utils.js</code></td></tr>
+          <tr><td>P0</td><td>为 diff parser 加单测</td><td>覆盖新增、修改、重命名、删除、过滤、最后文件。</td><td><code>test/</code></td></tr>
+          <tr><td>P1</td><td>替换 shell 拼接为 spawn args 或原生 API</td><td>降低特殊字符和注入风险。</td><td><code>git-utils.js</code>、<code>code-review.js</code></td></tr>
+          <tr><td>P1</td><td>明确 hooks 安装策略</td><td>全局 hooksPath 影响面很大，需要用户确认或文档强化。</td><td><code>git-hooks-manager.js</code></td></tr>
+          <tr><td>P2</td><td>整理 README 和命令帮助</td><td>删除过时的 <code>--no-cr</code> 表述，补齐 MR/rerun/deep link。</td><td><code>README.md</code></td></tr>
+          <tr><td>P2</td><td>决定 lifecycle 是否启用</td><td>启用则补 package scripts；不用则删除或标注手动入口。</td><td><code>package.json</code>、<code>scripts/</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="page-number">28</div>
+  </section>
+
+  <section class="slide" aria-label="Reading Guide">
+    <div class="inner">
+      <div class="eyebrow">23 / 阅读指南</div>
+      <h2>想快速接手，可以按这条路径读代码</h2>
+      <p class="subtitle">先读主链路，再读边界能力，最后看历史残留。</p>
+      <div class="rule"></div>
+      <div class="flow">
+        <div class="flow-row"><div class="flow-key">第 1 步</div><div class="flow-value"><code>package.json</code>：确认命令入口、版本、依赖和 Node 约束。</div></div>
+        <div class="flow-row"><div class="flow-key">第 2 步</div><div class="flow-value"><code>bin/index.js</code>：看真正注册了哪些命令，以及每个命令怎么分发。</div></div>
+        <div class="flow-row"><div class="flow-key">第 3 步</div><div class="flow-value"><code>lib/code-review.js</code>：理解 staged、branch、MR、rerun 的分支逻辑。</div></div>
+        <div class="flow-row"><div class="flow-key">第 4 步</div><div class="flow-value"><code>lib/git-utils.js</code>：重点看 diff 命令、numstat 解析、过滤和规则扫描。</div></div>
+        <div class="flow-row"><div class="flow-key">第 5 步</div><div class="flow-value"><code>lib/git-hooks-manager.js</code>：理解全局 hooks、本地包装、Husky 兼容、卸载恢复。</div></div>
+        <div class="flow-row"><div class="flow-key">第 6 步</div><div class="flow-value"><code>clipboard-manager.js</code> 与 <code>ibs-protocal.js</code>：理解 Cursor deep link 和 ibs:// URL Scheme。</div></div>
+      </div>
+    </div>
+    <div class="page-number">29</div>
+  </section>
+
+  <section class="slide" aria-label="Closing">
+    <div class="inner">
+      <div class="eyebrow">24 / 收束</div>
+      <h2>把这个项目理解成“三段式管道”最清楚</h2>
+      <p class="subtitle">本地采集、服务端建模、Cursor 执行。所有模块都可以放回这条主线里解释。</p>
+      <div class="rule"></div>
+      <div class="grid-3">
+        <div class="card">
+          <h3>本地采集</h3>
+          <ul>
+            <li>Git diff 和 commit</li>
+            <li>项目路径和用户名</li>
+            <li>JIRA ID 和 project_id</li>
+            <li>Cursor 自定义规则</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>服务端建模</h3>
+          <ul>
+            <li>创建 CR session</li>
+            <li>分批和去重</li>
+            <li>MR 模式数据获取</li>
+            <li>统一审查任务状态</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Cursor 执行</h3>
+          <ul>
+            <li>接收 deep link prompt</li>
+            <li>调用 batch review 工具</li>
+            <li>中文输出审查结果</li>
+            <li>与开发者继续交互</li>
+          </ul>
+        </div>
+      </div>
+      <div style="height:18px"></div>
+      <div class="callout teal">接手这个项目时，先保护 CR 主链路的数据一致性和 hooks 的可恢复性。这两个点决定了用户信任。</div>
+    </div>
+    <div class="page-number">30</div>
+  </section>
+</body>
+</html>
