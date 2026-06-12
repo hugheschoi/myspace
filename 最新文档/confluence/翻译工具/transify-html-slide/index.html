@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Transify 前端国际化翻译工具项目经验</title>
+    <style>
+      :root {
+        --ink: #172033;
+        --muted: #5d6678;
+        --subtle: #8b93a5;
+        --line: #d9deea;
+        --panel: #ffffff;
+        --soft: #f5f7fb;
+        --accent: #0e7c86;
+        --accent-2: #d45b37;
+        --accent-3: #f2b84b;
+        --deep: #24314a;
+        --ok: #2f8f61;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: #e9edf4;
+        color: var(--ink);
+        font-family:
+          Inter,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "PingFang SC",
+          "Microsoft YaHei",
+          sans-serif;
+      }
+
+      main {
+        width: 1280px;
+        margin: 0 auto;
+      }
+
+      .slide {
+        position: relative;
+        width: 1280px;
+        height: 720px;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        background:
+          linear-gradient(135deg, rgba(14, 124, 134, 0.08), transparent 32%),
+          linear-gradient(315deg, rgba(212, 91, 55, 0.08), transparent 26%),
+          #fbfcff;
+        padding: 52px 68px 46px;
+        border-bottom: 1px solid #dfe4ee;
+      }
+
+      .slide::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 10px;
+        height: 100%;
+        background: linear-gradient(180deg, var(--accent), var(--accent-2), var(--accent-3));
+      }
+
+      .cover {
+        background:
+          radial-gradient(circle at 78% 22%, rgba(14, 124, 134, 0.14), transparent 30%),
+          linear-gradient(135deg, #f7fafb 0%, #eef3f8 100%);
+      }
+
+      .kicker {
+        color: var(--accent);
+        font-size: 16px;
+        font-weight: 800;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        margin-top: 26px;
+        max-width: 850px;
+        font-size: 60px;
+        line-height: 1.08;
+        letter-spacing: 0;
+        color: var(--deep);
+      }
+
+      h2 {
+        font-size: 34px;
+        line-height: 1.18;
+        letter-spacing: 0;
+        color: var(--deep);
+      }
+
+      .subtitle {
+        margin-top: 12px;
+        max-width: 900px;
+        color: var(--muted);
+        font-size: 20px;
+        line-height: 1.46;
+      }
+
+      .rule {
+        height: 3px;
+        width: 96px;
+        margin-top: 20px;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        border-radius: 4px;
+      }
+
+      .content {
+        position: relative;
+        z-index: 1;
+        margin-top: 30px;
+      }
+
+      .cover .content {
+        margin-top: 58px;
+      }
+
+      .page-number {
+        position: absolute;
+        right: 42px;
+        bottom: 26px;
+        color: var(--subtle);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .tag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        max-width: 860px;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        height: 34px;
+        padding: 0 14px;
+        border-radius: 999px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        color: var(--deep);
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      code {
+        display: inline-block;
+        padding: 1px 6px;
+        border-radius: 5px;
+        background: #edf3f5;
+        color: #20304b;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.92em;
+        font-weight: 700;
+      }
+
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+      }
+
+      .metric,
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: 0 16px 34px rgba(36, 49, 74, 0.08);
+      }
+
+      .metric {
+        min-height: 122px;
+        padding: 22px 20px;
+      }
+
+      .metric strong {
+        display: block;
+        color: var(--accent);
+        font-size: 28px;
+        line-height: 1;
+      }
+
+      .metric span {
+        display: block;
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.45;
+      }
+
+      .three-col {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+        align-items: start;
+      }
+
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 22px;
+        align-items: start;
+      }
+
+      .card {
+        min-height: 174px;
+        padding: 22px;
+      }
+
+      .card h3 {
+        color: var(--deep);
+        font-size: 20px;
+        line-height: 1.25;
+      }
+
+      .card p,
+      .card li {
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.48;
+      }
+
+      .card p {
+        margin-top: 12px;
+      }
+
+      .card ul {
+        margin: 14px 0 0;
+        padding-left: 20px;
+      }
+
+      .badge {
+        display: inline-block;
+        margin-bottom: 14px;
+        color: #ffffff;
+        background: var(--accent);
+        border-radius: 6px;
+        padding: 5px 10px;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .badge.orange {
+        background: var(--accent-2);
+      }
+
+      .badge.gold {
+        background: #b47b14;
+      }
+
+      .flow {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 12px;
+        align-items: center;
+      }
+
+      .flow-node {
+        position: relative;
+        min-height: 116px;
+        padding: 18px 14px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0 10px 24px rgba(36, 49, 74, 0.08);
+      }
+
+      .flow-node:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        right: -18px;
+        top: 50%;
+        width: 24px;
+        height: 2px;
+        background: var(--accent);
+      }
+
+      .flow-node strong {
+        display: block;
+        color: var(--deep);
+        font-size: 17px;
+        line-height: 1.25;
+      }
+
+      .flow-node span {
+        display: block;
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.35;
+      }
+
+      .arch {
+        display: grid;
+        grid-template-columns: 0.9fr 1.25fr 0.9fr;
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .arch-col {
+        padding: 20px;
+        border-radius: 8px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+      }
+
+      .arch-col h3 {
+        font-size: 19px;
+        color: var(--deep);
+      }
+
+      .arch-list {
+        margin: 16px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .arch-list li {
+        margin-top: 12px;
+        padding: 12px;
+        border-radius: 6px;
+        background: var(--soft);
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.38;
+      }
+
+      .pipeline {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 10px;
+        margin-top: 8px;
+      }
+
+      .pipe-step {
+        min-height: 110px;
+        padding: 15px 12px;
+        background: #ffffff;
+        border-top: 5px solid var(--accent);
+        border-radius: 8px;
+        box-shadow: 0 10px 22px rgba(36, 49, 74, 0.08);
+        border-left: 1px solid var(--line);
+        border-right: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .pipe-step strong {
+        display: block;
+        font-size: 16px;
+        color: var(--deep);
+      }
+
+      .pipe-step span {
+        display: block;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.35;
+      }
+
+      .code-panel {
+        background: #152033;
+        color: #e8edf6;
+        border-radius: 8px;
+        padding: 18px 20px;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 15px;
+        line-height: 1.45;
+        box-shadow: 0 16px 34px rgba(21, 32, 51, 0.22);
+        white-space: pre-wrap;
+      }
+
+      .code-panel .comment {
+        color: #8ea0bd;
+      }
+
+      .code-panel .kw {
+        color: #78d3c5;
+      }
+
+      .code-panel .str {
+        color: #ffd37a;
+      }
+
+      .code-panel .fn {
+        color: #8fc7ff;
+      }
+
+      .note {
+        margin-top: 16px;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.45;
+      }
+
+      .decision-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        overflow: hidden;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 14px 30px rgba(36, 49, 74, 0.08);
+      }
+
+      .decision-table th,
+      .decision-table td {
+        padding: 15px 16px;
+        text-align: left;
+        border-bottom: 1px solid var(--line);
+        font-size: 15px;
+        line-height: 1.38;
+      }
+
+      .decision-table th {
+        color: var(--deep);
+        background: #eef4f6;
+        font-size: 15px;
+      }
+
+      .decision-table td {
+        color: var(--muted);
+      }
+
+      .decision-table tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .highlight {
+        color: var(--accent);
+        font-weight: 800;
+      }
+
+      .resume {
+        display: grid;
+        grid-template-columns: 1.08fr 0.92fr;
+        gap: 20px;
+      }
+
+      .quote {
+        padding: 24px 28px;
+        border-radius: 8px;
+        background: var(--deep);
+        color: #ffffff;
+        font-size: 23px;
+        line-height: 1.46;
+        box-shadow: 0 18px 36px rgba(36, 49, 74, 0.18);
+      }
+
+      .quote strong {
+        color: #8de1d7;
+      }
+
+      .compact-list {
+        margin: 0;
+        padding-left: 22px;
+      }
+
+      .compact-list li {
+        margin-bottom: 10px;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.42;
+      }
+
+      .split-band {
+        display: grid;
+        grid-template-columns: 0.95fr 1.05fr;
+        gap: 22px;
+        align-items: start;
+      }
+
+      .formula {
+        margin-top: 18px;
+        padding: 20px;
+        border-radius: 8px;
+        background: #ffffff;
+        border: 1px dashed var(--accent);
+        color: var(--deep);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 20px;
+        line-height: 1.45;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="slide cover" aria-label="cover">
+        <div class="kicker">Project Experience</div>
+        <h1>Transify 前端国际化翻译工具</h1>
+        <p class="subtitle">
+          从手写翻译 Key 到自动生成、开发态收集、平台上传与语言包下载的工程化链路。
+        </p>
+        <div class="rule"></div>
+        <div class="content">
+          <div class="tag-row">
+            <span class="tag">TypeScript</span>
+            <span class="tag">Vue i18n</span>
+            <span class="tag">MD5 Key</span>
+            <span class="tag">SessionStorage</span>
+            <span class="tag">CLI 自动化</span>
+            <span class="tag">翻译平台</span>
+          </div>
+        </div>
+        <div class="page-number">01</div>
+      </section>
+
+      <section class="slide" aria-label="problem">
+        <div class="kicker">01 / Why</div>
+        <h2>主要解决的问题：翻译 Key 管理从人肉约定变成工具约束</h2>
+        <p class="subtitle">业务快速迭代时，国际化问题通常不是“能不能翻译”，而是“能否稳定、低成本、可追踪地翻译”。</p>
+        <div class="rule"></div>
+        <div class="content">
+          <div class="metrics">
+            <div class="metric">
+              <strong>命名不统一</strong>
+              <span>手写 Key 容易出现风格差异、重复命名和语义漂移。</span>
+            </div>
+            <div class="metric">
+              <strong>收集靠人工</strong>
+              <span>新增文案散落在页面和组件中，遗漏后只能在测试阶段暴露。</span>
+            </div>
+            <div class="metric">
+              <strong>平台链路断层</strong>
+              <span>代码、翻译平台、本地语言包之间需要人工搬运。</span>
+            </div>
+            <div class="metric">
+              <strong>排查成本高</strong>
+              <span>生产环境不能暴露 Key，开发环境又要能快速定位缺失文案。</span>
+            </div>
+          </div>
+        </div>
+        <div class="page-number">02</div>
+      </section>
+
+      <section class="slide" aria-label="goal">
+        <div class="kicker">02 / Goal</div>
+        <h2>项目目标：业务只写默认文案，工具负责后续链路</h2>
+        <p class="subtitle">用统一 <code>$gt</code> 函数承接业务接入，用稳定 Key 算法承接平台映射，用开发态与 CLI 工具承接收集和流转。</p>
+        <div class="rule"></div>
+        <div class="content">
+          <div class="three-col">
+            <div class="card">
+              <span class="badge">开发体验</span>
+              <h3>默认文案即入口</h3>
+              <p>开发者写 <code>$gt('Order Id')</code>，不再关心手工命名和 Key 维护。</p>
+            </div>
+            <div class="card">
+              <span class="badge orange">稳定映射</span>
+              <h3>算法生成规范 Key</h3>
+              <p>通过 <code>project + namespace + label</code> 生成 16 位 MD5 Key，减少人为差异。</p>
+            </div>
+            <div class="card">
+              <span class="badge gold">工程闭环</span>
+              <h3>收集、上传、下载闭环</h3>
+              <p>开发态自动收集缺失 Key，配合 CLI 完成扫描、上传、下载。</p>
+            </div>
+          </div>
+        </div>
+        <div class="page-number">03</div>
+      </section>
+
+      <section class="slide" aria-label="architecture">
+        <div class="kicker">03 / Architecture</div>
+        <h2>整体架构：运行时 Client + 本地 CLI + 翻译平台</h2>
+        <p class="subtitle">当前仓库主要承载运行时 Client；完整方案中，CLI 负责静态扫描与平台自动化。</p>
+        <div class="rule"></div>
+        <div class="content">
+          <div class="arch">
+            <div class="arch-col">
+              <h3>业务代码</h3>
+              <ul class="arch-list">
+                <li>统一调用 <code>$gt(label, namespace, options)</code></li>
+                <li>保留默认英文文案作为兜底</li>
+                <li>通过 namespace 区分同文案不同语义</li>
+              </ul>
+            </div>
+            <div class="arch-col">
+              <h3>Transify Client</h3>
+              <ul class="arch-list">
+                <li><code>generateKey</code> 生成稳定 16 位 MD5 Key</li>
+                <li><code>generateTransifyVueI18n</code> 包装 vue-i18n</li>
+                <li>开发环境收集缺失 Key 到 <code>sessionStorage</code></li>
+              </ul>
+            </div>
+            <div class="arch-col">
+              <h3>工具链与平台</h3>
+              <ul class="arch-list">
+                <li><code>ssc-tsf</code> 扫描代码并上传 Key</li>
+                <li>翻译平台维护多语言资源</li>
+                <li>下载语言包回到本地 i18n 目录</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="page-number">04</div>
+      </section>
+
+      <section class="slide" aria-label="runtime-flow">
+        <div class="kicker">04 / Runtime Flow</div>
+        <h2>运行时思路：先算 Key，再决定翻译、兜底或收集</h2>
+        <p class="subtitle">同一个 <code>$gt</code> 调用在开发、测试、生产环境下保持一致入口，但分支策略不同。</p>
+        <div class="rule"></div>
+        <div class="content">
+          <div class="flow">
+            <div class="flow-node">
+              <strong>调用 $gt</strong>
+              <span>传入 label、namespace、options</span>
+            </div>
+            <div class="flow-node">
+              <strong>生成 Key</strong>
+              <span>project + namespace + label</span>
+            </div>
+            <div class="flow-node">
+              <strong>检查资源</strong>
+              <span>i18n.te(computedKey)</span>
+            </div>
+            <div class="flow-node">
+              <strong>缺失处理</strong>
+              <span>prod 返回 label，dev 收集 key</span>
+            </div>
+            <div class="flow-node">
+              <strong>输出文案</strong>
+              <span>i18n.t(key, options)</span>
+            </div>
+          </div>
+          <p class="note">
+            关键点：生产环境避免把内部 Key 暴露给用户；开发环境则尽可能把缺失翻译沉淀出来，形成后续上传输入。
+          </p>
+        </div>
+        <div class="page-number">05</div>
+      </section>
+
+      <section class="slide" aria-label="key-implementation">
+        <div class="kicker">05 / Key Algorithm</div>
+        <h2>关键实现一：稳定 Key 生成</h2>
+        <p class="subtitle">Key 既要足够短，又要能稳定复现，还要支持同文案不同语义。</p>
+        <div class="rule"></div>
+        <div class="content">
+          <div class="split-band">
+            <div>
+              <div class="formula">md5('${project}_${namespace}_${label}')<br />.slice(8, 24)</div>
+              <ul class="compact-list" style="margin-top: 22px">
+                <li><code>project</code> 保证不同项目之间 Key 空间隔离。</li>
+                <li><code>namespace</code> 解决同一个英文文案在不同业务语义下的冲突。</li>
+                <li><code>label</code> 保留默认文案，让业务开发不需要先想 Key。</li>
+                <li>截取 16 位降低 Key 长度，方便资源文件和页面排查。</li>
+              </ul>
+            </div>
+            <pre class="code-panel"><span class="kw">function</span> <span class="fn">md516</span>(str: string): string {
+  <span class="kw">return</span> md5(str) && md5(str).slice(8, 24);
+}
+
+<span class="kw">export function</span> <span class="fn">generateKey</span>({ label, project, namespace }) {
+  <span class="kw">if</span> (!project || !label) <span class="kw">return</span> <span class="str">''</span>;
+  <span class="kw">const</span> computedKey = [project, namespace, label]
+    .filter(Boolean)
+    .join(<span class="str">'_'</span>)
+    .replace(/\s/g, <span class="str">'_'</span>);
+
+  <span class="kw">return</span> md516(computedKey);
+}</pre>
+          </div>
+        </div>
+        <div class="page-number">06</div>
+      </section>
+
+      <section class="slide" aria-label="runtime-implementation">
+        <div class="kicker">06 / Runtime Implementation</div>
+        <h2>关键实现二：包装 vue-i18n 生成统一 <code>$gt</code></h2>
+        <p class="subtitle">把业务调用、资源检查、开发态收集和生产兜底都收束到一个函数中。</p>
+        <div class="rule"></div>
+        <div class="content">
+          <div class="two-col">
+            <pre class="code-panel"><span class="kw">export function</span> <span class="fn">generateTransifyVueI18n</span>(i18n, config) {
+  <span class="kw">if</span> (!config.project) {
+    <span class="kw">throw new</span> Error(<span class="str">'project is required!'</span>);
+  }
+
+  <span class="kw">return function</span> (label, namespace, options) {
+    <span class="kw">const</span> computedKey = generateKey({
+      label,
+      namespace,
+      project: config.project,
+    });
+
+    <span class="kw">if</span> (!computedKey) <span class="kw">return</span> <span class="str">''</span>;
+    <span class="kw">if</span> (config.isShowKey) <span class="kw">return</span> computedKey;</pre>
+            <pre class="code-panel"><span class="kw">    if</span> (!i18n.te(computedKey)) {
+      <span class="kw">if</span> (!config.isDev) <span class="kw">return</span> label;
+      addTranslationKey(computedKey, label);
+    }
+
+    <span class="kw">return</span> i18n.t(computedKey, options);
+  };
+}</pre>
+          </div>
+          <p class="note">
+            这里的核心取舍是：生产缺失时返回默认文案，避免出现不可读 Key；开发缺失时收集 Key，为后续上传和补齐翻译服务。
+          </p>
+        </div>
+        <div class="page-number">07</div>
+      </section>
+
+      <section class="slide" aria-label="collect-upload">
+        <div class="kicker">07 / Collect & Upload</div>
+        <h2>实现过程：开发态收集与平台链路拆分</h2>
+        <p class="subtitle">当前源码提供浏览器端收集和导出；完整工具链由 CLI 承担扫描、上传、下载等自动化能力。</p>
+        <div class="rule"></div>
+        <div class="content">
+          <div class="pipeline">
+            <div class="pipe-step">
+              <strong>业务访问</strong>
+              <span>触发页面路径和交互分支</span>
+            </div>
+            <div class="pipe-step">
+              <strong>缺失检测</strong>
+              <span><code>i18n.te</code> 判断资源不存在</span>
+            </div>
+            <div class="pipe-step">
+              <strong>本地暂存</strong>
+              <span><code>sessionStorage.collectKeys</code></span>
+            </div>
+            <div class="pipe-step">
+              <strong>导出文件</strong>
+              <span><code>translateToolExport()</code> 生成 dev.json</span>
+            </div>
+            <div class="pipe-step">
+              <strong>平台上传</strong>
+              <span>CLI 或平台 import 接口处理</span>
+            </div>
+            <div class="pipe-step">
+              <strong>语言包下载</strong>
+              <span>回流到本地 i18n 资源目录</span>
+            </div>
+          </div>
+          <div class="two-col" style="margin-top: 24px">
+            <div class="card">
+              <h3>当前仓库实际可用</h3>
+              <ul>
+                <li><code>translateToolExport()</code> 导出 <code>dev.json</code></li>
+                <li><code>translateToolClear()</code> 清理历史暂存</li>
+                <li>冲突时输出旧值和新值，阻止覆盖</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>历史完整方案</h3>
+              <ul>
+                <li><code>ssc-tsf update</code> 扫描 diff 并上传</li>
+                <li><code>ssc-tsf download</code> 下载翻译平台语言包</li>
+                <li><code>scan/export/upload</code> 支持更多批处理场景</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="page-number">08</div>
+      </section>
+
+      <section class="slide" aria-label="decisions">
+        <div class="kicker">08 / Decisions</div>
+        <h2>方案选择：在易用性、稳定性和安全性之间取平衡</h2>
+        <p class="subtitle">这个项目的价值不只是写一个函数，而是把团队国际化流程中的几个关键取舍定下来。</p>
+        <div class="rule"></div>
+        <div class="content">
+          <table class="decision-table">
+            <thead>
+              <tr>
+                <th>决策点</th>
+                <th>可选方案</th>
+                <th>最终选择</th>
+                <th>理由</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Key 来源</td>
+                <td>手写业务 Key / 文案生成 Key</td>
+                <td><span class="highlight">文案生成 Key</span></td>
+                <td>降低接入心智，减少命名规范争议。</td>
+              </tr>
+              <tr>
+                <td>Key 形态</td>
+                <td>长字符串 / 完整 MD5 / 16 位 MD5</td>
+                <td><span class="highlight">16 位 MD5</span></td>
+                <td>兼顾稳定性、长度和可识别性。</td>
+              </tr>
+              <tr>
+                <td>缺失翻译</td>
+                <td>显示 Key / 报错 / 返回默认文案</td>
+                <td><span class="highlight">生产返回 label</span></td>
+                <td>保护用户体验，避免内部 Key 暴露。</td>
+              </tr>
+              <tr>
+                <td>上传 Token</td>
+                <td>浏览器一键上传 / CLI 上传</td>
+                <td><span class="highlight">优先 CLI</span></td>
+                <td>减少浏览器保存敏感凭证的风险，便于 CI 集成。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="page-number">09</div>
+      </section>
+
+      <section class="slide" aria-label="resume-summary">
+        <div class="kicker">09 / Resume Story</div>
+        <h2>简历表达：突出“工程化闭环”和“平台化能力”</h2>
+        <p class="subtitle">面试讲述时建议先讲问题，再讲架构，再讲关键实现和取舍，最后落到结果。</p>
+        <div class="rule"></div>
+        <div class="content">
+          <div class="resume">
+            <div class="quote">
+              负责 Transify 前端国际化翻译工具建设，封装统一 <strong>$gt</strong> 翻译函数，基于
+              <strong>project + namespace + label</strong> 生成稳定 16 位 MD5 Key，并打通开发态收集、平台上传和语言包下载链路，提升多业务项目国际化接入效率。
+            </div>
+            <div class="card">
+              <h3>可展开的技术点</h3>
+              <ul>
+                <li>Key 生成规则如何避免冲突和过长资源名。</li>
+                <li>为什么生产缺失翻译时返回默认文案。</li>
+                <li>为什么开发态使用 <code>sessionStorage</code> 暂存。</li>
+                <li>CLI 扫描上传相比浏览器上传的安全性优势。</li>
+                <li>静态扫描对 <code>$gt</code> 入参写法的约束。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="page-number">10</div>
+      </section>
+    </main>
+  </body>
+</html>

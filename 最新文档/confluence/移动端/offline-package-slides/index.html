@@ -1,0 +1,1477 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mgmt 离线包与双端架构方案</title>
+    <style>
+      :root {
+        --ink: #182230;
+        --muted: #64748b;
+        --soft: #f6f8fb;
+        --line: #d9e2ef;
+        --blue: #2563eb;
+        --cyan: #0891b2;
+        --green: #059669;
+        --orange: #f97316;
+        --red: #dc2626;
+        --purple: #7c3aed;
+        --navy: #13233a;
+        --white: #ffffff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: #e8edf5;
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+          sans-serif;
+      }
+
+      body {
+        padding: 28px 0;
+      }
+
+      main.deck {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 28px;
+      }
+
+      .slide {
+        position: relative;
+        width: 1280px;
+        height: 720px;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        background: var(--white);
+        box-shadow: 0 22px 70px rgba(15, 23, 42, 0.18);
+      }
+
+      .slide::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+          linear-gradient(90deg, rgba(37, 99, 235, 0.05), transparent 32%),
+          radial-gradient(circle at 92% 10%, rgba(8, 145, 178, 0.12), transparent 28%),
+          linear-gradient(180deg, rgba(246, 248, 251, 0.9), rgba(255, 255, 255, 0));
+      }
+
+      .cover {
+        background:
+          linear-gradient(135deg, rgba(19, 35, 58, 0.98), rgba(28, 65, 111, 0.96)),
+          #13233a;
+        color: var(--white);
+      }
+
+      .cover::before {
+        background:
+          linear-gradient(125deg, rgba(37, 99, 235, 0.36), transparent 48%),
+          radial-gradient(circle at 83% 21%, rgba(249, 115, 22, 0.25), transparent 28%);
+      }
+
+      .cover-grid {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 42px;
+        height: 100%;
+        padding: 82px 82px 58px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--blue);
+        font-size: 17px;
+        font-weight: 760;
+        letter-spacing: 0;
+      }
+
+      .cover .eyebrow {
+        color: #93c5fd;
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 28px;
+        height: 3px;
+        border-radius: 999px;
+        background: currentColor;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        margin-top: 24px;
+        font-size: 66px;
+        line-height: 1.03;
+        font-weight: 840;
+        letter-spacing: 0;
+      }
+
+      .cover-subtitle {
+        margin-top: 24px;
+        width: 90%;
+        font-size: 23px;
+        line-height: 1.48;
+        color: rgba(255, 255, 255, 0.82);
+      }
+
+      .cover-meta {
+        position: absolute;
+        left: 82px;
+        bottom: 52px;
+        display: flex;
+        gap: 16px;
+        color: rgba(255, 255, 255, 0.76);
+        font-size: 15px;
+      }
+
+      .cover-diagram {
+        align-self: center;
+        display: grid;
+        gap: 18px;
+      }
+
+      .cover-diagram .stage {
+        display: grid;
+        grid-template-columns: 74px 1fr;
+        align-items: center;
+        gap: 18px;
+        padding: 20px 22px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(2px);
+      }
+
+      .stage-num {
+        display: grid;
+        place-items: center;
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        background: rgba(147, 197, 253, 0.18);
+        color: #bfdbfe;
+        font-size: 22px;
+        font-weight: 820;
+      }
+
+      .stage-title {
+        font-size: 24px;
+        font-weight: 780;
+      }
+
+      .stage-desc {
+        margin-top: 5px;
+        color: rgba(255, 255, 255, 0.68);
+        font-size: 15px;
+        line-height: 1.42;
+      }
+
+      .slide-header {
+        position: relative;
+        z-index: 2;
+        padding: 44px 66px 0;
+      }
+
+      .slide-title {
+        margin-top: 12px;
+        font-size: 39px;
+        line-height: 1.18;
+        font-weight: 830;
+        letter-spacing: 0;
+      }
+
+      .slide-subtitle {
+        margin-top: 9px;
+        max-width: 970px;
+        color: var(--muted);
+        font-size: 17px;
+        line-height: 1.42;
+      }
+
+      .separator {
+        position: relative;
+        z-index: 2;
+        margin: 22px 66px 0;
+        height: 1px;
+        background: var(--line);
+      }
+
+      .content {
+        position: relative;
+        z-index: 2;
+        padding: 26px 66px 50px;
+      }
+
+      .page-number {
+        position: absolute;
+        right: 42px;
+        bottom: 26px;
+        color: #94a3b8;
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .footer-note {
+        position: absolute;
+        left: 66px;
+        bottom: 24px;
+        color: #94a3b8;
+        font-size: 13px;
+      }
+
+      .two-col,
+      .three-col,
+      .four-col {
+        display: grid;
+        gap: 18px;
+        align-items: start;
+      }
+
+      .two-col {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .three-col {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .four-col {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.88);
+        padding: 20px 21px;
+      }
+
+      .card.compact {
+        padding: 16px 18px;
+      }
+
+      .card-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--ink);
+        font-size: 21px;
+        line-height: 1.24;
+        font-weight: 800;
+      }
+
+      .card-title.small {
+        font-size: 18px;
+      }
+
+      .card-desc {
+        margin-top: 10px;
+        color: #475569;
+        font-size: 16px;
+        line-height: 1.52;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 54px;
+        height: 28px;
+        padding: 0 11px;
+        border-radius: 999px;
+        background: #eff6ff;
+        color: var(--blue);
+        font-size: 13px;
+        font-weight: 780;
+      }
+
+      .tag.green {
+        background: #ecfdf5;
+        color: var(--green);
+      }
+
+      .tag.orange {
+        background: #fff7ed;
+        color: var(--orange);
+      }
+
+      .tag.red {
+        background: #fef2f2;
+        color: var(--red);
+      }
+
+      .tag.purple {
+        background: #f5f3ff;
+        color: var(--purple);
+      }
+
+      .metric-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 16px;
+      }
+
+      .metric {
+        padding: 18px 20px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: var(--soft);
+      }
+
+      .metric-value {
+        font-size: 34px;
+        line-height: 1;
+        font-weight: 850;
+        color: var(--blue);
+      }
+
+      .metric-label {
+        margin-top: 9px;
+        color: #475569;
+        font-size: 15px;
+        line-height: 1.4;
+      }
+
+      .flow {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
+        gap: 14px;
+        align-items: stretch;
+      }
+
+      .flow-step {
+        position: relative;
+        min-height: 128px;
+        padding: 18px 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--white);
+      }
+
+      .flow-step::after {
+        content: "→";
+        position: absolute;
+        right: -16px;
+        top: 45%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 26px;
+        font-weight: 800;
+      }
+
+      .flow-step:last-child::after {
+        display: none;
+      }
+
+      .step-index {
+        color: var(--blue);
+        font-size: 14px;
+        font-weight: 820;
+      }
+
+      .step-title {
+        margin-top: 7px;
+        font-size: 18px;
+        font-weight: 800;
+        line-height: 1.25;
+      }
+
+      .step-desc {
+        margin-top: 8px;
+        color: #64748b;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      .code {
+        display: block;
+        padding: 16px 18px;
+        border-radius: 8px;
+        background: #0f172a;
+        color: #dbeafe;
+        font-family:
+          "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 15px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+      }
+
+      .mini-code {
+        display: inline-block;
+        padding: 3px 7px;
+        border-radius: 5px;
+        background: #eef2ff;
+        color: #3730a3;
+        font-family:
+          "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 14px;
+      }
+
+      .split-panel {
+        display: grid;
+        grid-template-columns: 0.95fr 1.05fr;
+        gap: 24px;
+        align-items: start;
+      }
+
+      .diagram-box {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #f8fafc;
+        padding: 20px;
+      }
+
+      .stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .stack-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        padding: 13px 15px;
+        border-radius: 8px;
+        background: var(--white);
+        border: 1px solid #e5edf7;
+      }
+
+      .stack-main {
+        font-size: 17px;
+        font-weight: 760;
+      }
+
+      .stack-sub {
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.35;
+      }
+
+      .bullets {
+        display: grid;
+        gap: 13px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .bullets li {
+        position: relative;
+        padding-left: 23px;
+        color: #334155;
+        font-size: 17px;
+        line-height: 1.46;
+      }
+
+      .bullets li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 10px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--blue);
+      }
+
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--white);
+      }
+
+      .table th,
+      .table td {
+        padding: 13px 15px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+        font-size: 15px;
+        line-height: 1.38;
+      }
+
+      .table th {
+        background: #eff6ff;
+        color: #1e3a8a;
+        font-weight: 800;
+      }
+
+      .table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .timeline {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 0;
+        padding: 28px 18px 0;
+      }
+
+      .timeline::before {
+        content: "";
+        position: absolute;
+        top: 38px;
+        left: 52px;
+        right: 52px;
+        height: 3px;
+        background: linear-gradient(90deg, var(--blue), var(--green), var(--orange));
+      }
+
+      .time-node {
+        position: relative;
+        padding-top: 30px;
+        text-align: center;
+      }
+
+      .time-node::before {
+        content: "";
+        position: absolute;
+        top: 5px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--white);
+        border: 4px solid var(--blue);
+      }
+
+      .time-title {
+        font-size: 18px;
+        font-weight: 820;
+      }
+
+      .time-desc {
+        margin: 8px auto 0;
+        max-width: 180px;
+        color: #64748b;
+        font-size: 14px;
+        line-height: 1.42;
+      }
+
+      .layer {
+        display: grid;
+        grid-template-columns: 170px 1fr;
+        gap: 16px;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+
+      .layer-name {
+        padding: 12px 14px;
+        border-radius: 8px;
+        background: #eef2ff;
+        color: #3730a3;
+        font-size: 17px;
+        font-weight: 800;
+        text-align: center;
+      }
+
+      .layer-body {
+        padding: 12px 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--white);
+        color: #475569;
+        font-size: 15px;
+        line-height: 1.4;
+      }
+
+      .callout {
+        border-left: 5px solid var(--orange);
+        background: #fff7ed;
+        padding: 17px 20px;
+        border-radius: 0 8px 8px 0;
+        color: #7c2d12;
+        font-size: 17px;
+        line-height: 1.48;
+      }
+
+      .callout.blue {
+        border-left-color: var(--blue);
+        background: #eff6ff;
+        color: #1e3a8a;
+      }
+
+      .big-quote {
+        padding: 34px 42px;
+        border-radius: 8px;
+        background: #f8fafc;
+        border: 1px solid var(--line);
+        font-size: 28px;
+        line-height: 1.42;
+        font-weight: 780;
+      }
+
+      .closing {
+        background: #13233a;
+        color: var(--white);
+      }
+
+      .closing::before {
+        background:
+          linear-gradient(125deg, rgba(8, 145, 178, 0.32), transparent 46%),
+          radial-gradient(circle at 86% 18%, rgba(249, 115, 22, 0.26), transparent 28%);
+      }
+
+      .closing .content {
+        padding: 98px 82px 64px;
+      }
+
+      .closing h2 {
+        font-size: 54px;
+        line-height: 1.12;
+        font-weight: 850;
+      }
+
+      .closing-grid {
+        margin-top: 36px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+      }
+
+      .closing-card {
+        min-height: 150px;
+        padding: 22px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .closing-card strong {
+        display: block;
+        font-size: 22px;
+        margin-bottom: 10px;
+      }
+
+      .closing-card span {
+        color: rgba(255, 255, 255, 0.75);
+        font-size: 16px;
+        line-height: 1.45;
+      }
+    </style>
+  </head>
+
+  <body>
+    <main class="deck">
+      <section class="slide cover" aria-label="封面">
+        <div class="cover-grid">
+          <div>
+            <div class="eyebrow">Mgmt APP 技术方案梳理</div>
+            <h1>离线包与双端架构</h1>
+            <p class="cover-subtitle">
+              从 H5 构建产物、APP 本地加载、多应用版本治理，到 PC/H5 一套代码适配，完整串起 mgmt-app-h5-release 的技术逻辑。
+            </p>
+          </div>
+          <div class="cover-diagram">
+            <div class="stage">
+              <div class="stage-num">01</div>
+              <div>
+                <div class="stage-title">资源离线化</div>
+                <div class="stage-desc">HTML、JS、图片、i18n 打包成可校验 zip。</div>
+              </div>
+            </div>
+            <div class="stage">
+              <div class="stage-num">02</div>
+              <div>
+                <div class="stage-title">版本治理</div>
+                <div class="stage-desc">app_id 独立灰度、发布、回滚与升级提示。</div>
+              </div>
+            </div>
+            <div class="stage">
+              <div class="stage-num">03</div>
+              <div>
+                <div class="stage-title">双端复用</div>
+                <div class="stage-desc">applications 收口业务，isolate 隔离 PC/H5 差异。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="cover-meta">
+          <span>Source: mgmt-app-h5-release + PDF 方案文档</span>
+          <span>HTML Slide Deck</span>
+        </div>
+      </section>
+
+      <section class="slide" aria-label="理解主线">
+        <div class="slide-header">
+          <div class="eyebrow">Overview</div>
+          <h2 class="slide-title">先抓住三条主线</h2>
+          <p class="slide-subtitle">这个项目不是单点优化，而是一套覆盖构建、运行、发布、回滚和多端研发的工程体系。</p>
+        </div>
+        <div class="separator"></div>
+        <div class="content">
+          <div class="three-col">
+            <div class="card">
+              <div class="card-title"><span class="tag">资源</span>离线包闭环</div>
+              <p class="card-desc">Vite/Webpack 产物被改写、复制、校验、压缩，再由 APP 下载并在 WebView 请求时命中本地。</p>
+            </div>
+            <div class="card">
+              <div class="card-title"><span class="tag green">版本</span>多应用治理</div>
+              <p class="card-desc">从一个 APP 一个 app_id，演进到 biz_id 下多个业务 app_id，支持独立发布、灰度和回滚。</p>
+            </div>
+            <div class="card">
+              <div class="card-title"><span class="tag orange">研发</span>PC/H5 双端</div>
+              <p class="card-desc">页面和业务逻辑共用，端侧差异落到 adapter/isolate，由构建时 alias 决定最终使用哪端实现。</p>
+            </div>
+          </div>
+          <div class="callout blue" style="margin-top: 28px">
+            最重要的心智模型：离线包解决“资源怎么到本地”，版本服务解决“用哪个版本”，双端架构解决“同一业务怎么在 PC/H5 运行”。
+          </div>
+        </div>
+        <div class="page-number">02</div>
+      </section>
+
+      <section class="slide" aria-label="为什么需要离线包">
+        <div class="slide-header">
+          <div class="eyebrow">Background</div>
+          <h2 class="slide-title">为什么 Management APP 需要离线包</h2>
+          <p class="slide-subtitle">Management APP 是 Hybrid 模式：Native APP 内打开 H5。弱网下，纯在线资源会拖慢首屏甚至直接失败。</p>
+        </div>
+        <div class="separator"></div>
+        <div class="content">
+          <div class="metric-row">
+            <div class="metric">
+              <div class="metric-value">弱网</div>
+              <div class="metric-label">东南亚等网络环境下，HTML、JS、CSS、图片每次在线拉取都不稳定。</div>
+            </div>
+            <div class="metric">
+              <div class="metric-value">首屏</div>
+              <div class="metric-label">APP 打开 H5 页面的等待时间直接影响站点操作效率和用户感知。</div>
+            </div>
+            <div class="metric">
+              <div class="metric-value">兜底</div>
+              <div class="metric-label">本地资源命中失败还能回落 CDN/ALB，不把可用性压在单一路径上。</div>
+            </div>
+          </div>
+          <div class="big-quote" style="margin-top: 30px">
+            离线包的本质：把静态资源提前下载到 APP 本地，让 WebView 打开页面时少依赖网络。
+          </div>
+        </div>
+        <div class="page-number">03</div>
+      </section>
+
+      <section class="slide" aria-label="单应用离线包架构">
+        <div class="slide-header">
+          <div class="eyebrow">Offline v1</div>
+          <h2 class="slide-title">早期方案：一个 APP，一个离线包应用</h2>
+          <p class="slide-subtitle">资源按更新频率拆成 vendor 和 bundle，但版本粒度仍然是整个 APP。</p>
+        </div>
+        <div class="separator"></div>
+        <div class="content">
+          <div class="split-panel">
+            <div class="diagram-box">
+              <div class="stack">
+                <div class="stack-item">
+                  <div>
+                    <div class="stack-main">APP / app_id</div>
+                    <div class="stack-sub">例如 managementApp</div>
+                  </div>
+                  <span class="tag">v1</span>
+                </div>
+                <div class="stack-item">
+                  <div>
+                    <div class="stack-main">vendor.zip</div>
+                    <div class="stack-sub">React、MobX、ECharts、UI 库等低频资源</div>
+                  </div>
+                  <span class="tag green">稳定</span>
+                </div>
+                <div class="stack-item">
+                  <div>
+                    <div class="stack-main">bundle.zip</div>
+                    <div class="stack-sub">业务 JS、HTML、图片、语言资源等高频资源</div>
+                  </div>
+                  <span class="tag orange">高频</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <ul class="bullets">
+                <li>资源 URL 只需要带 <span class="mini-code">_offl_id</span>，APP 根据它找到 vendor 或 bundle。</li>
+                <li>优点是实现成本低、APP 请求映射简单、BFF 版本模型也简单。</li>
+                <li>问题是任意业务改动都要发布整个 APP 离线包，灰度和回滚粒度过粗。</li>
+                <li>业务越来越多后，包体积、并行发布、跨业务互相阻塞都会变成瓶颈。</li>
+              </ul>
+              <div class="code" style="margin-top: 22px">/mgmt/assets/app.js?_offl_id=bundle
+/mgmt/vendor/react.js?_offl_id=vendor</div>
+            </div>
+          </div>
+        </div>
+        <div class="page-number">04</div>
+      </section>
+
+      <section class="slide" aria-label="构建产物结构">
+        <div class="slide-header">
+          <div class="eyebrow">Build Output</div>
+          <h2 class="slide-title">离线包最终交给 APP 的是什么</h2>
+          <p class="slide-subtitle">不是把 dist 原样塞给 APP，而是生成可下载、可校验、可版本化的 zip 与 manifest。</p>
+        </div>
+        <div class="separator"></div>
+        <div class="content">
+          <div class="two-col">
+            <div class="card">
+              <div class="card-title">zip 内部</div>
+              <div class="code" style="margin-top: 14px">vendor.zip
+  verify.json
+  deo.shopeemobile.com/...
+
+bundle.zip
+  verify.json
+  spx.test.shopee.sg/mgmt/...
+  assets/...</div>
+            </div>
+            <div class="card">
+              <div class="card-title">offline_manifest.json</div>
+              <div class="code" style="margin-top: 14px">{
+  "packages": [
+    {
+      "id": "vendor",
+      "md5": "zip md5",
+      "CDN": "https://.../vendor.zip"
+    },
+    {
+      "id": "bundle",
+      "md5": "zip md5",
+      "CDN": "https://.../bundle.zip"
+    }
+  ]
+}</div>
+            </div>
+          </div>
+          <div class="callout" style="margin-top: 20px">
+            <strong>verify.json</strong> 校验单文件，manifest 校验 zip 与下载地址；两层校验共同保证 APP 本地资源可靠。
+          </div>
+        </div>
+        <div class="page-number">05</div>
+      </section>
+
+      <section class="slide" aria-label="构建插件流程">
+        <div class="slide-header">
+          <div class="eyebrow">Vite Plugin</div>
+          <h2 class="slide-title">buildOffline 插件做的核心动作</h2>
+          <p class="slide-subtitle">它把普通 Vite 产物改造成 APP 能识别的离线资源。</p>
+        </div>
+        <div class="separator"></div>
+        <div class="content">
+          <div class="flow">
+            <div class="flow-step">
+              <div class="step-index">01</div>
+              <div class="step-title">遍历 bundle</div>
+              <div class="step-desc">拿到 HTML、JS、图片、SVG 等全部构建产物。</div>
+            </div>
+            <div class="flow-step">
+              <div class="step-index">02</div>
+              <div class="step-title">追加参数</div>
+              <div class="step-desc">给资源引用加 <span class="mini-code">?_offl_id=...</span>。</div>
+            </div>
+            <div class="flow-step">
+              <div class="step-index">03</div>
+              <div class="step-title">复制路径</div>
+              <div class="step-desc">按真实请求路径写入 vendor/bundle 目录。</div>
+            </div>
+            <div class="flow-step">
+              <div class="step-index">04</div>
+              <div class="step-title">生成校验</div>
+              <div class="step-desc">为每个文件写入 md5 到 verify.json。</div>
+            </div>
+            <div class="flow-step">
+              <div class="step-index">05</div>
+              <div class="step-title">压缩发布</div>
+              <div class="step-desc">zip、计算 zip md5、生成 manifest。</div>
+            </div>
+          </div>
+          <div class="two-col" style="margin-top: 26px">
+            <div class="card compact">
+              <div class="card-title small">关键文件</div>
+              <p class="card-desc"><span class="mini-code">vite/plugins/build-offline/index.ts</span><br />main 当前使用的本地离线包插件。</p>
+            </div>
+            <div class="card compact">
+              <div class="card-title small">SDK 版本</div>
+              <p class="card-desc"><span class="mini-code">@scfe-common/version-mgr</span><br />WMS 已接入，支持 _app_id 与独立静态资源包。</p>
+            </div>
+          </div>
+        </div>
+        <div class="page-number">06</div>
+      </section>
+
+      <section class="slide" aria-label="APP 加载流程">
+        <div class="slide-header">
+          <div class="eyebrow">Runtime</div>
+          <h2 class="slide-title">APP 如何把网络请求变成本地文件</h2>
+          <p class="slide-subtitle">离线包不是 H5 自己加载本地文件，而是 Native APP 拦截 WebView 请求并映射。</p>
+        </div>
+        <div class="separator"></div>
+        <div class="content">
+          <div class="flow">
+            <div class="flow-step">
+              <div class="step-index">01</div>
+              <div class="step-title">拉版本配置</div>
+              <div class="step-desc">冷启动或定时向 BFF/Version Service 获取版本。</div>
+            </div>
+            <div class="flow-step">
+              <div class="step-index">02</div>
+              <div class="step-title">下载 zip</div>
+              <div class="step-desc">比较 md5，缺失或变化才下载。</div>
+            </div>
+            <div class="flow-step">
+              <div class="step-index">03</div>
+              <div class="step-title">解压校验</div>
+              <div class="step-desc">zip md5 + verify.json 单文件校验。</div>
+            </div>
+            <div class="flow-step">
+              <div class="step-index">04</div>
+              <div class="step-title">拦截请求</div>
+              <div class="step-desc">读取 _app_id 和 _offl_id，定位本地目录。</div>
+            </div>
+            <div class="flow-step">
+              <div class="step-index">05</div>
+              <div class="step-title">失败兜底</div>
+              <div class="step-desc">本地缺失、校验失败或路径不匹配时走线上。</div>
+            </div>
+          </div>
+          <div class="callout blue" style="margin-top: 30px">
+            关键点：APP 优先用本地缓存配置，再异步拉最新配置，所以离线包发布后并不是全量用户立即生效。
+          </div>
+        </div>
+        <div class="page-number">07</div>
+      </section>
+
+      <section class="slide" aria-label="HTML 路由映射">
+        <div class="slide-header">
+          <div class="eyebrow">HTML Mapping</div>
+          <h2 class="slide-title">为什么 offline-config 里列了大量路由</h2>
+          <p class="slide-subtitle">SPA 页面虽然共用 index.html，但 APP 是按真实 URL 路径找本地 HTML。</p>
+        </div>
+        <div class="separator"></div>
+        <div class="content">
+          <div class="split-panel">
+            <div>
+              <ul class="bullets">
+                <li>用户可能打开 <span class="mini-code">/mgmt/main/operation/fm-hub</span> 这样的深层路径。</li>
+                <li>这些路径在 Web 服务上都应返回同一个 SPA HTML。</li>
+                <li>离线包里必须把同一个 HTML 复制到这些请求路径下，APP 才能命中本地。</li>
+                <li>新增页面只改路由不补 offline-config，会导致离线包找不到 HTML，直接回落线上。</li>
+              </ul>
+            </div>
+            <div class="diagram-box">
+              <div class="stack">
+                <div class="stack-item">
+                  <div class="stack-main">index.html</div>
+                  <span class="tag">源文件</span>
+                </div>
+                <div class="stack-item">
+                  <div>
+                    <div class="stack-main">/mgmt/main</div>
+                    <div class="stack-sub">默认首页</div>
+                  </div>
+                  <span class="tag green">复制</span>
+                </div>
+                <div class="stack-item">
+                  <div>
+                    <div class="stack-main">/mgmt/main/operation</div>
+                    <div class="stack-sub">业务 tab</div>
+                  </div>
+                  <span class="tag green">复制</span>
+                </div>
+                <div class="stack-item">
+                  <div>
+                    <div class="stack-main">/mgmt/main/operation/fm-hub</div>
+                    <div class="stack-sub">深层页面</div>
+                  </div>
+                  <span class="tag green">复制</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="page-number">08</div>
+      </section>
+
+      <section class="slide" aria-label="多应用离线包">
+        <div class="slide-header">
+          <div class="eyebrow">Offline v2</div>
+          <h2 class="slide-title">多应用离线包：biz_id 管 APP，app_id 管业务</h2>
+          <p class="slide-subtitle">版本粒度从“整个 APP”细化到“APP 内某个业务”。</p>
+        </div>
+        <div class="separator"></div>
+        <div class="content">
+          <div class="two-col">
+            <div class="card">
+              <div class="card-title">旧模型</div>
+              <div class="code" style="margin-top: 14px">app_id = spx-mgmt-app
+  version 100
+    vendor.zip
+    bundle.zip</div>
+              <p class="card-desc">所有业务共享一个版本；一个业务异常可能影响整包灰度和回滚。</p>
+            </div>
+            <div class="card">
+              <div class="card-title">新模型</div>
+              <div class="code" style="margin-top: 14px">biz_id = spx-mgmt-app
+  app_id = main
+  app_id = order-tracking
+  app_id = tools</div>
+              <p class="card-desc">每个业务 app_id 独立版本；发布、灰度、回滚粒度都更细。</p>
+            </div>
+          </div>
+          <div class="code" style="margin-top: 20px">react.js?_app_id=order-tracking&_offl_id=vendor
+page.js?_app_id=order-tracking&_offl_id=bundle</div>
+        </div>
+        <div class="page-number">09</div>
+      </section>
+
+      <section class="slide" aria-label="Order Tracking 拆分">
+        <div class="slide-header">
+          <div class="eyebrow">Pilot</div>
+          <h2 class="slide-title">Order Tracking：多应用拆分试点</h2>
+          <p class="slide-subtitle">目标是把高频独立业务从 main 中拆出去，同时保证旧路径和新 APP 迁移期不出事故。</p>
+        </div>
+        <div class="separator"></div>
+        <div class="content">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>关注点</th>
+                <th>旧状态</th>
+                <th>迁移策略</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>路径</td>
+                <td><span class="mini-code">/mgmt/order-tracking.html</span><br /><span class="mini-code">/mgmt/order-detail.html</span></td>
+                <td>兼容旧 .html，同时引导到新路由 <span class="mini-code">/mgmt/order-tracking</span>。</td>
+              </tr>
+              <tr>
+                <td>构建</td>
+                <td>业务在 main 包中，影响主包体积。</td>
+                <td>独立服务和 ALB；迁移期 main 只克隆 HTML 入口，不把完整业务资源打回主包。</td>
+              </tr>
+              <tr>
+                <td>发布</td>
+                <td>跟 main 绑定。</td>
+                <td>BFF/Version Service → FE → APP；先发版再改 Apollo 路由，避免 404。</td>
+              </tr>
+              <tr>
+                <td>回滚</td>
+                <td>整包回滚。</td>
+                <td>新版 APP 不可直接回旧协议；灰度问题回当前架构全量稳定包。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="page-number">10</div>
+      </section>
+
+      <section class="slide" aria-label="版本服务与发布链路">
+        <div class="slide-header">
+          <div class="eyebrow">Version Service</div>
+          <h2 class="slide-title">发布链路：从 manifest 到 APP 可用版本</h2>
+          <p class="slide-subtitle">构建出 zip 不等于上线，还要创建版本并配置 live/gray。</p>
+        </div>
+        <div class="separator"></div>
+        <div class="content">
+          <div class="flow">
+            <div class="flow-step">
+              <div class="step-index">01</div>
+              <div class="step-title">构建产物</div>
+              <div class="step-desc">dist + offline_manifest.json + zip。</div>
+            </div>
+            <div class="flow-step">
+              <div class="step-index">02</div>
+              <div class="step-title">上传 CDN</div>
+              <div class="step-desc">manifest 中的 CDN 地址必须真实有效。</div>
+            </div>
+            <div class="flow-step">
+              <div class="step-index">03</div>
+              <div class="step-title">创建版本</div>
+              <div class="step-desc">SDK 调 create_app_version 或 create_pc_version。</div>
+            </div>
+            <div class="flow-step">
+              <div class="step-index">04</div>
+              <div class="step-title">配置版本</div>
+              <div class="step-desc">Apollo/Version Service 配 live、gray、名单。</div>
+            </div>
+            <div class="flow-step">
+              <div class="step-index">05</div>
+              <div class="step-title">APP 拉取</div>
+              <div class="step-desc">下载、校验、解压后可命中本地。</div>
+            </div>
+          </div>
+          <div class="two-col" style="margin-top: 26px">
+            <div class="card compact">
+              <div class="card-title small">安全</div>
+              <p class="card-desc">SDK 创建版本时带 <span class="mini-code">X-Version-App-Id</span>、<span class="mini-code">X-Version-Biz-Id</span>、access key。</p>
+            </div>
+            <div class="card compact">
+              <div class="card-title small">通知</div>
+              <p class="card-desc">创建成功或失败后通过 Seatalk 告知版本号、配置链接和构建信息。</p>
+            </div>
+          </div>
+        </div>
+        <div class="page-number">11</div>
+      </section>
+
+      <section class="slide" aria-label="灰度与即时更新">
+        <div class="slide-header">
+          <div class="eyebrow">Gray & Update</div>
+          <h2 class="slide-title">灰度与即时更新：从“设备”转向“用户”</h2>
+          <p class="slide-subtitle">离线包长期停留在旧版本会影响新功能覆盖，也会增加后端多版本兼容成本。</p>
+        </div>
+        <div class="separator"></div>
+        <div class="content">
+          <div class="two-col">
+            <div class="card">
+              <div class="card-title">灰度匹配</div>
+              <ul class="bullets" style="margin-top: 14px">
+                <li>旧方案按 device_id，难以精准命中目标用户。</li>
+                <li>新方案支持 user_id，同时保留区域、内部灰度等维度。</li>
+                <li>PC version-mgr 会按用户 hash 和 region 选择 remoteEntry。</li>
+              </ul>
+            </div>
+            <div class="card">
+              <div class="card-title">即时更新取舍</div>
+              <ul class="bullets" style="margin-top: 14px">
+                <li>WebSocket/SSE 实时性高，但长连接维护成本高。</li>
+                <li>轮询简单，但低频版本更新会产生大量无效请求。</li>
+                <li>最终倾向业务场景检测 + APP 10 分钟定时检测兜底。</li>
+              </ul>
+            </div>
+          </div>
+          <div class="callout" style="margin-top: 20px">
+            核心目标不是“秒级推送”，而是让关键版本能在可控时间内覆盖，同时避免升级机制打断现场操作。
+          </div>
+        </div>
+        <div class="page-number">12</div>
+      </section>
+
+      <section class="slide" aria-label="升级体验">
+        <div class="slide-header">
+          <div class="eyebrow">Upgrade UX</div>
+          <h2 class="slide-title">升级体验：从强弹窗走向弱提醒</h2>
+          <p class="slide-subtitle">用户反馈频繁重启弹窗影响使用，因此升级策略要在覆盖时效与操作体验之间平衡。</p>
+        </div>
+        <div class="separator"></div>
+        <div class="content">
+          <div class="four-col">
+            <div class="card compact">
+              <div class="card-title small"><span class="tag red">强</span>弹窗重启</div>
+              <p class="card-desc">覆盖快，实现简单；但强打断，用户体验最差。</p>
+            </div>
+            <div class="card compact">
+              <div class="card-title small"><span class="tag orange">中</span>弹窗刷新</div>
+              <p class="card-desc">不用重启；但 WebView 运行态清理和稳定性成本高。</p>
+            </div>
+            <div class="card compact">
+              <div class="card-title small"><span class="tag green">弱</span>红点升级</div>
+              <p class="card-desc">不打断操作；覆盖时效较慢，版本碎片化更明显。</p>
+            </div>
+            <div class="card compact">
+              <div class="card-title small"><span class="tag purple">隐</span>切后台刷新</div>
+              <p class="card-desc">用户感知弱；但触发时机不稳定，覆盖不可控。</p>
+            </div>
+          </div>
+          <div class="code" style="margin-top: 26px">jsBridge.checkUpgradeInfo()
+  -> FeatureBadge.refreshBadgeStatus()
+  -> jsBridge.syncBadges({ badges: [...] })</div>
+        </div>
+        <div class="page-number">13</div>
+      </section>
+
+      <section class="slide" aria-label="回滚和降级">
+        <div class="slide-header">
+          <div class="eyebrow">Rollback</div>
+          <h2 class="slide-title">回滚与降级：协议兼容是边界</h2>
+          <p class="slide-subtitle">离线包回滚看似只改版本配置，实际取决于 APP 是否能识别这套协议和本地是否已有旧资源。</p>
+        </div>
+        <div class="separator"></div>
+        <div class="content">
+          <div class="three-col">
+            <div class="card">
+              <div class="card-title">普通全量回滚</div>
+              <p class="card-desc">将 live version 指回上一个稳定版本；APP 后续拉配置后切回旧资源。</p>
+            </div>
+            <div class="card">
+              <div class="card-title">灰度问题</div>
+              <p class="card-desc">停止灰度名单或把 gray version 指向稳定版本，不影响非灰度用户。</p>
+            </div>
+            <div class="card">
+              <div class="card-title">架构切换期</div>
+              <p class="card-desc">新版 APP 不支持旧单应用协议时，不能简单回旧包，只能发兼容修复或引导升级。</p>
+            </div>
+          </div>
+          <div class="callout blue" style="margin-top: 28px">
+            快速降级成立的四个前提：版本服务可切、APP 能及时拉、旧包可用、新旧协议兼容。
+          </div>
+        </div>
+        <div class="page-number">14</div>
+      </section>
+
+      <section class="slide" aria-label="SDK 增强">
+        <div class="slide-header">
+          <div class="eyebrow">version-mgr SDK</div>
+          <h2 class="slide-title">SDK 化：把离线包和 PC 版本能力抽出来</h2>
+          <p class="slide-subtitle">WMS 已使用 `@scfe-common/version-mgr`，main 仍保留一份本地插件实现。</p>
+        </div>
+        <div class="separator"></div>
+        <div class="content">
+          <div class="three-col">
+            <div class="card">
+              <div class="card-title"><span class="tag">1</span>自动 _app_id</div>
+              <p class="card-desc">传入 appId 后，资源 URL 默认带 <span class="mini-code">_app_id</span> 与 <span class="mini-code">_offl_id</span>。</p>
+            </div>
+            <div class="card">
+              <div class="card-title"><span class="tag green">2</span>构建环境入 manifest</div>
+              <p class="card-desc">把 PFB、ENV、GIT_COMMIT、GIT_TAG、PIPELINE_URL 写入 envs，便于通知和追溯。</p>
+            </div>
+            <div class="card">
+              <div class="card-title"><span class="tag orange">3</span>独立静态资源包</div>
+              <p class="card-desc">i18n 等可拆成 static app_id，单独创建版本和刷新。</p>
+            </div>
+          </div>
+          <div class="code" style="margin-top: 24px">buildOfflinePlugin({
+  appId: 'sbs-mgmt-h5-dashboard',
+  staticAppId: 'sbs-mgmt-h5-assets',
+  enableIndependentStatic: true
+})</div>
+        </div>
+        <div class="page-number">15</div>
+      </section>
+
+      <section class="slide" aria-label="双端架构分层">
+        <div class="slide-header">
+          <div class="eyebrow">Dual End</div>
+          <h2 class="slide-title">双端适配：共用业务，隔离端差异</h2>
+          <p class="slide-subtitle">目标不是所有代码完全一样，而是让页面、模型、API 口径尽量统一，差异沉到边界层。</p>
+        </div>
+        <div class="separator"></div>
+        <div class="content">
+          <div class="layer">
+            <div class="layer-name">框架/路由层</div>
+            <div class="layer-body">端侧入口、路由、Vite/Webpack、离线包构建、PC remoteEntry。</div>
+          </div>
+          <div class="layer">
+            <div class="layer-name">pages 层</div>
+            <div class="layer-body">页面组合业务，不直接散落 PC/H5 差异。</div>
+          </div>
+          <div class="layer">
+            <div class="layer-name">applications 层</div>
+            <div class="layer-body">稳定业务出口，组合通用组件、hooks、rules、handlers。</div>
+          </div>
+          <div class="layer">
+            <div class="layer-name">isolate 适配层</div>
+            <div class="layer-body">同名接口，分别实现 index.h5 与 index.pc，把组件、跳转、布局、帮助弹窗等差异隐藏起来。</div>
+          </div>
+          <div class="layer">
+            <div class="layer-name">Service/API 层</div>
+            <div class="layer-body">与 BFF 通信，尽量不感知端差异，保证数据口径一致。</div>
+          </div>
+        </div>
+        <div class="page-number">16</div>
+      </section>
+
+      <section class="slide" aria-label="adapter 选择机制">
+        <div class="slide-header">
+          <div class="eyebrow">Adapter</div>
+          <h2 class="slide-title">同一行 import，构建器决定拿哪端实现</h2>
+          <p class="slide-subtitle">业务代码依赖 `@adapter/*` 或 `@applications/*`，H5/PC 通过 tsconfig 或 alias 指向不同文件。</p>
+        </div>
+        <div class="separator"></div>
+        <div class="content">
+          <div class="two-col">
+            <div class="card">
+              <div class="card-title">业务代码</div>
+              <div class="code" style="margin-top: 14px">import { useNavigate } from '@adapter/hooks'
+import { getMultiEndProps } from '@adapter/rules'
+import { Link } from '@applications/components'</div>
+              <p class="card-desc">页面不需要知道当前是 PC 还是 H5。</p>
+            </div>
+            <div class="card">
+              <div class="card-title">构建映射</div>
+              <div class="code" style="margin-top: 14px">H5: @adapter/rules
+  -> isolate/rules/index.h5
+
+PC: @adapter/rules
+  -> isolate/rules/index.pc</div>
+              <p class="card-desc">端侧组件、跳转、路由前缀、用户来源都在 isolate 内解决。</p>
+            </div>
+          </div>
+          <div class="code" style="margin-top: 20px">getMultiEndProps(h5Value, pcValue)
+// H5 返回 h5Value；PC 返回 pcValue</div>
+        </div>
+        <div class="page-number">17</div>
+      </section>
+
+      <section class="slide" aria-label="WMS 双端与静态包">
+        <div class="slide-header">
+          <div class="eyebrow">WMS / SBS</div>
+          <h2 class="slide-title">WMS：双端入口 + version-mgr 落地样板</h2>
+          <p class="slide-subtitle">WMS 包里同时能看到 H5 离线包、PC 版本管理、双端 adapter 和独立静态资源包。</p>
+        </div>
+        <div class="separator"></div>
+        <div class="content">
+          <div class="three-col">
+            <div class="card">
+              <div class="card-title">H5 入口</div>
+              <p class="card-desc"><span class="mini-code">wms-mgmt/h5/index.tsx</span><br />BrowserRouter、JSBridge、离线信息、翻译刷新、预加载事件。</p>
+            </div>
+            <div class="card">
+              <div class="card-title">PC 入口</div>
+              <p class="card-desc"><span class="mini-code">wms-mgmt/pc/index.tsx</span><br />加载 PC 语言资源，并由 version-mgr 注入 remote entry 选择逻辑。</p>
+            </div>
+            <div class="card">
+              <div class="card-title">适配层</div>
+              <p class="card-desc"><span class="mini-code">@wms-adapter/*</span><br />H5 默认指向 index.h5，PC Vite alias 改到 index.pc。</p>
+            </div>
+          </div>
+          <div class="callout blue" style="margin-top: 28px">
+            WMS 的 i18n 可以成为独立静态 app_id，APP 通过 `offlineResourceRefresh` 通知 H5 重新加载翻译，而不必刷新整包业务。
+          </div>
+        </div>
+        <div class="page-number">18</div>
+      </section>
+
+      <section class="slide" aria-label="PC Dashboard 和 FMS">
+        <div class="slide-header">
+          <div class="eyebrow">PC / FMS</div>
+          <h2 class="slide-title">PC Dashboard：remoteEntry 是版本入口</h2>
+          <p class="slide-subtitle">FMS 基座加载 remoteEntry，拿到子应用 routes，再把页面注册到 PC 框架。</p>
+        </div>
+        <div class="separator"></div>
+        <div class="content">
+          <div class="split-panel">
+            <div>
+              <div class="flow" style="grid-auto-flow: row">
+                <div class="flow-step">
+                  <div class="step-index">01</div>
+                  <div class="step-title">构建 remoteEntry</div>
+                  <div class="step-desc">webpack Module Federation 暴露 <span class="mini-code">./module</span>。</div>
+                </div>
+                <div class="flow-step">
+                  <div class="step-index">02</div>
+                  <div class="step-title">重命名入口</div>
+                  <div class="step-desc">remoteEntry.react.js 变成带 commit/tag 的版本文件。</div>
+                </div>
+                <div class="flow-step">
+                  <div class="step-index">03</div>
+                  <div class="step-title">FMS 加载路由</div>
+                  <div class="step-desc">基座 import module，注册 reactRoutes/vueRoutes。</div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">FMS 异步化结论</div>
+              <ul class="bullets" style="margin-top: 14px">
+                <li>按需加载页面资源要靠子应用路由动态 import 与 Suspense。</li>
+                <li>把灰度版本匹配强行迁入 Dashboard 内部风险大。</li>
+                <li>原因是会绕开 Module Federation 共享机制，Shared、VueStore 等都要重新注入。</li>
+              </ul>
+              <div class="code" style="margin-top: 16px">remoteEntry.react.v_{commit}_{tag}.js
+version-info.json -> remoteEntryFileName</div>
+            </div>
+          </div>
+        </div>
+        <div class="page-number">19</div>
+      </section>
+
+      <section class="slide" aria-label="排查清单">
+        <div class="slide-header">
+          <div class="eyebrow">Debug Checklist</div>
+          <h2 class="slide-title">离线包问题优先查这几件事</h2>
+          <p class="slide-subtitle">大多数问题都落在路径、参数、版本配置、校验和协议兼容这几类。</p>
+        </div>
+        <div class="separator"></div>
+        <div class="content">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>现象</th>
+                <th>优先检查</th>
+                <th>常见修复</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>页面走线上</td>
+                <td>HTML 路径是否在 offline-config；URL 是否带 _app_id/_offl_id。</td>
+                <td>补 htmlOutDirs；跳转时保留离线参数。</td>
+              </tr>
+              <tr>
+                <td>资源 404</td>
+                <td>assetsPublicPath、ALB basePath、zip 内路径是否一致。</td>
+                <td>统一同域路径；重建 verify 与 manifest。</td>
+              </tr>
+              <tr>
+                <td>样式丢失</td>
+                <td>CSS 是否独立文件、路径是否被 APP 映射。</td>
+                <td>CSS 注入 JS；检查资源参数改写。</td>
+              </tr>
+              <tr>
+                <td>升级不生效</td>
+                <td>APP 是否拉到新版本、下载是否完成、是否需要二次打开。</td>
+                <td>checkUpgradeInfo、红点提示、主动 updateOfflinePkg。</td>
+              </tr>
+              <tr>
+                <td>回滚失败</td>
+                <td>新旧 APP 是否支持同一离线包协议。</td>
+                <td>在当前协议下发修复包，不跨协议直接回旧包。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="page-number">20</div>
+      </section>
+
+      <section class="slide closing" aria-label="结束页">
+        <div class="content">
+          <div class="eyebrow">Mental Model</div>
+          <h2>把项目理解成三个闭环</h2>
+          <div class="closing-grid">
+            <div class="closing-card">
+              <strong>资源闭环</strong>
+              <span>构建、URL 改写、verify、manifest、zip、APP 本地命中。</span>
+            </div>
+            <div class="closing-card">
+              <strong>版本闭环</strong>
+              <span>app_id 注册、创建版本、灰度配置、更新提醒、回滚降级。</span>
+            </div>
+            <div class="closing-card">
+              <strong>双端闭环</strong>
+              <span>页面共用业务，applications 收口，isolate 隐藏 PC/H5 差异。</span>
+            </div>
+          </div>
+        </div>
+        <div class="footer-note" style="color: rgba(255, 255, 255, 0.58)">mgmt-app-h5-release / offline package architecture</div>
+        <div class="page-number" style="color: rgba(255, 255, 255, 0.58)">21</div>
+      </section>
+    </main>
+  </body>
+</html>
